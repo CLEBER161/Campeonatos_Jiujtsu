@@ -18,12 +18,19 @@ def normalizar_username(valor):
 class CampeonatoForm(forms.ModelForm):
     class Meta:
         model = Campeonato
-        fields = ['nome', 'local', 'data_evento', 'quantidade_tatames', 'inscricoes_abertas', 'ativo']
+        fields = [
+            'nome', 'local', 'data_evento', 'quantidade_tatames',
+            'prazo_pagamento_dias', 'pesagem_inicio_dias', 'pesagem_fim_dias',
+            'inscricoes_abertas', 'ativo',
+        ]
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Open Jiu-Jitsu 2026'}),
             'local': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Ginásio Municipal'}),
             'data_evento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'quantidade_tatames': forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'max': '50'}),
+            'prazo_pagamento_dias': forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'max': '30'}),
+            'pesagem_inicio_dias': forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'max': '10'}),
+            'pesagem_fim_dias': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'max': '10'}),
             'inscricoes_abertas': forms.CheckboxInput(attrs={'style': 'width:18px;height:18px;'}),
             'ativo': forms.CheckboxInput(attrs={'style': 'width:18px;height:18px;'}),
         }

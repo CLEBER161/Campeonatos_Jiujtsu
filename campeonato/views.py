@@ -1484,10 +1484,93 @@ def apoio_home(request):
     })
 
 
+def apoio_inscricoes(request):
+    """Lista todos os atletas inscritos com status de pagamento e pesagem."""
+    campeonato = get_campeonato_atual(request)
+    if not campeonato:
+        messages.warning(request, 'Selecione um campeonato primeiro.')
+        return redirect('apoio_home')
+
+    filtro = request.GET.get('filtro', 'todos')
+    inscricoes_qs = InscricaoCampeonato.objects.filter(
+        campeonato=campeonato,
+    ).select_related('atleta', 'categoria').order_by('atleta__nome')
+
+    if filtro == 'sem_pagamento':
+        inscricoes_qs = inscricoes_qs.filter(pagamento_confirmado=False)
+    elif filtro == 'sem_pesagem':
+        inscricoes_qs = inscricoes_qs.filter(pesagem_confirmada=False)
+    elif filtro == 'ok':
+        inscricoes_qs = inscricoes_qs.filter(pagamento_confirmado=True, pesagem_confirmada=True)
+
+    from datetime import date, timedelta
+    hoje = date.today()
+    janela_pesagem_ativa = campeonato.janela_pesagem_ativa
+    prazo_pagamento_ok = campeonato.prazo_pagamento_ok
+
+    return render(request, 'campeonato/apoio_inscricoes.html', {
+        'campeonato_atual': campeonato,
+        'inscricoes': inscricoes_qs,
+        'filtro': filtro,
+        'janela_pesagem_ativa': janela_pesagem_ativa,
+        'prazo_pagamento_ok': prazo_pagamento_ok,
+        'total': inscricoes_qs.count(),
+        'total_pago': InscricaoCampeonato.objects.filter(campeonato=campeonato, pagamento_confirmado=True).count(),
+        'total_pesado': InscricaoCampeonato.objects.filter(campeonato=campeonato, pesagem_confirmada=True).count(),
+    })
+
+
+@require_POST
+def apoio_confirmar_pagamento(request, pk):
+    """Confirma (ou reverte) o pagamento de uma inscrição."""
+    inscricao = get_object_or_404(InscricaoCampeonato, pk=pk)
+    acao = request.POST.get('acao', 'confirmar')
+    if acao == 'confirmar':
+        from django.utils import timezone
+        inscricao.pagamento_confirmado = True
+        inscricao.pagamento_confirmado_em = timezone.now()
+        inscricao.save(update_fields=['pagamento_confirmado', 'pagamento_confirmado_em'])
+        messages.success(request, f'Pagamento de {inscricao.atleta.nome} confirmado.')
+    else:
+        inscricao.pagamento_confirmado = False
+        inscricao.pagamento_confirmado_em = None
+        inscricao.save(update_fields=['pagamento_confirmado', 'pagamento_confirmado_em'])
+        messages.warning(request, f'Pagamento de {inscricao.atleta.nome} revertido.')
+    return redirect(request.POST.get('next') or 'apoio_inscricoes')
+
+
+@require_POST
+def apoio_confirmar_pesagem(request, pk):
+    """Registra o peso aferido e confirma a pesagem de uma inscrição."""
+    inscricao = get_object_or_404(InscricaoCampeonato, pk=pk)
+    acao = request.POST.get('acao', 'confirmar')
+    if acao == 'confirmar':
+        from django.utils import timezone
+        import decimal
+        peso_str = request.POST.get('peso_aferido', '').replace(',', '.').strip()
+        try:
+            peso = decimal.Decimal(peso_str)
+        except decimal.InvalidOperation:
+            messages.error(request, 'Peso inválido. Digite um número (ex: 72.5).')
+            return redirect(request.POST.get('next') or 'apoio_inscricoes')
+        inscricao.pesagem_confirmada = True
+        inscricao.peso_aferido = peso
+        inscricao.pesagem_realizada_em = timezone.now()
+        inscricao.save(update_fields=['pesagem_confirmada', 'peso_aferido', 'pesagem_realizada_em'])
+        messages.success(request, f'Pesagem de {inscricao.atleta.nome} confirmada: {peso} kg.')
+    else:
+        inscricao.pesagem_confirmada = False
+        inscricao.peso_aferido = None
+        inscricao.pesagem_realizada_em = None
+        inscricao.save(update_fields=['pesagem_confirmada', 'peso_aferido', 'pesagem_realizada_em'])
+        messages.warning(request, f'Pesagem de {inscricao.atleta.nome} revertida.')
+    return redirect(request.POST.get('next') or 'apoio_inscricoes')
+
+
 def apoio_validar(request, codigo):
-    """Valida o QR code e faz check-in do atleta."""
+    """Valida o QR Code de um atleta e realiza o check-in."""
     try:
-        inscricao = InscricaoCampeonato.objects.select_related('atleta', 'categoria', 'checkin__baia', 'campeonato').get(codigo=codigo)
+        inscricao = InscricaoCampeonato.objects.select_related('atleta', 'categoria').get(codigo=codigo)
         atleta = inscricao.atleta
     except InscricaoCampeonato.DoesNotExist:
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':

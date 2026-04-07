@@ -138,7 +138,7 @@ set_run_color(r2, COR_SECAO)
 p3 = doc.add_paragraph()
 p3.alignment = WD_ALIGN_PARAGRAPH.CENTER
 p3.paragraph_format.space_before = Pt(60)
-r3 = p3.add_run(f'Versão 1.0  ·  {datetime.date.today().strftime("%B de %Y")}')
+r3 = p3.add_run(f'Versão 2.0  ·  {datetime.date.today().strftime("%B de %Y")}')
 r3.font.size = Pt(11)
 set_run_color(r3, COR_CINZA)
 r3.italic = True
@@ -152,11 +152,12 @@ heading(doc, 'SUMÁRIO', 1)
 sumario_itens = [
     '1. Visão Geral do Sistema',
     '2. Módulo de Organização',
-    '   2.1  Gerenciar Campeonatos',
-    '   2.2  Categorias',
-    '   2.3  Tatames e Baias',
-    '   2.4  Equipe (Mesários e Árbitros)',
-    '   2.5  Estrutura e Chaveamento',
+    '   2.1  Login da Organização',
+    '   2.2  Gerenciar Campeonatos',
+    '   2.3  Categorias',
+    '   2.4  Tatames e Baias',
+    '   2.5  Equipe (Mesários e Árbitros)',
+    '   2.6  Estrutura e Chaveamento',
     '3. Módulo de Mesa e Arbitragem',
     '   3.1  Login do Mesário',
     '   3.2  Login do Árbitro',
@@ -171,6 +172,8 @@ sumario_itens = [
     '   5.3  Chaveamento e Resultados',
     '   5.4  Credencial e QR Code',
     '6. Módulo de Apoio / Credenciamento',
+    '   6.1  Scanner QR Code e Check-in',
+    '   6.2  Confirmação de Pagamento e Pesagem',
     '7. Ranking',
     '8. Referência de URLs',
     '9. Dados de Teste (Simulação)',
@@ -198,7 +201,7 @@ bullet(doc, 'Organização — administra campeonatos, categorias, tatames e equ
 bullet(doc, 'Mesário — opera a mesa de pontuação no tatame (inicia luta e lança pontos).')
 bullet(doc, 'Árbitro — perfil separado para consulta e acompanhamento do tatame.')
 bullet(doc, 'Atleta — se inscreve, acompanha o chaveamento e visualiza sua credencial.')
-bullet(doc, 'Apoio / Credenciamento — valida a entrada de atletas via QR code.')
+bullet(doc, 'Apoio / Credenciamento — confirma pagamentos, realiza pesagem e valida QR code no credenciamento.')
 
 body(doc, 'Tecnologias utilizadas:', bold=True)
 bullet(doc, 'Backend: Django 6 (Python 3.12)')
@@ -214,14 +217,27 @@ body(doc,
     'Acessado pelo staff (superusuário ou usuário com is_staff=True). '
     'Controla toda a estrutura do evento.')
 
-heading(doc, '2.1 Gerenciar Campeonatos', 2)
+heading(doc, '2.1 Login da Organização', 2)
+url(doc, 'Login da organização', 'http://127.0.0.1:8000/organizacao/login/')
+bullet(doc, 'Acesso restrito: apenas usuários com is_staff=True ou superusuários podem entrar.')
+bullet(doc, 'Após o login, o usuário é direcionado ao painel principal da organização.')
+bullet(doc, 'O nome do usuário logado é exibido no cabeçalho com botão de "Sair".')
+bullet(doc, 'Todas as páginas do portal da organização redirecionam para o login caso a sessão não esteja autenticada.')
+bullet(doc, 'Para criar o primeiro superusuário: python manage.py createsuperuser')
+
+heading(doc, '2.2 Gerenciar Campeonatos', 2)
 bullet(doc, 'Criar, editar e excluir campeonatos com nome, data, local e quantidade de tatames.')
 bullet(doc, 'Ao criar campeonato, o sistema gera automaticamente os tatames e um mesário por tatame.')
 bullet(doc, 'Senha dos mesários é gerada automaticamente e fica disponível para impressão.')
 bullet(doc, 'Definir o campeonato "atual" para que os demais módulos o utilizem automaticamente.')
 bullet(doc, 'Visualizar estatísticas gerais: total de atletas, lutas, categorias e tatames.')
+body(doc, 'Prazos e janela de pesagem (configurados por campeonato):', bold=True)
+bullet(doc, 'Prazo de pagamento (dias antes) — número de dias antes do evento até quando o pagamento pode ser confirmado.')
+bullet(doc, 'Pesagem início (dias antes) — início da janela de pesagem em dias antes do evento.')
+bullet(doc, 'Pesagem fim (dias antes) — fim da janela de pesagem em dias antes do evento.')
+bullet(doc, 'Exemplo: pagamento=3, pesagem início=2, pesagem fim=1 → pagamento fecha 3 dias antes; pesagem ocorre entre D-2 e D-1.')
 
-heading(doc, '2.2 Categorias', 2)
+heading(doc, '2.3 Categorias', 2)
 bullet(doc, 'Cadastrar categorias com faixa, gênero, peso e idade.')
 bullet(doc, 'Categorias padrão pré-configuradas para jiu-jitsu (branca, azul, roxa, marrom, preta).')
 bullet(doc, 'Vincular categorias a campeonatos.')
@@ -240,7 +256,7 @@ bullet(doc, 'Vincular mesários aos tatames do campeonato.')
 bullet(doc, 'Imprimir folha de credenciais das mesas com usuário e senha por tatame.')
 bullet(doc, 'Desvincular perfis de mesa/tatame a qualquer momento.')
 
-heading(doc, '2.5 Estrutura e Chaveamento', 2)
+heading(doc, '2.6 Estrutura e Chaveamento', 2)
 bullet(doc, 'Gerar chaveamento por eliminação simples para cada categoria.')
 bullet(doc, 'Visualizar e gerenciar a árvore de lutas (chaves).')
 bullet(doc, 'Avançar lutas para a próxima rodada automaticamente após registro do resultado.')
@@ -373,13 +389,35 @@ bullet(doc, 'QR code imprimível para uso no dia do evento.')
 # 6. MÓDULO DE APOIO / CREDENCIAMENTO
 # ══════════════════════════════════════════════════════════════════════════════
 heading(doc, '6. Módulo de Apoio / Credenciamento', 1)
-url(doc, 'Validação', 'http://127.0.0.1:8000/apoio/validar/')
+url(doc, 'Portal de apoio', 'http://127.0.0.1:8000/apoio/')
 body(doc,
-    'Interface para voluntários e equipe de apoio no credenciamento do evento.')
-bullet(doc, 'Leitura de QR code do atleta via câmera ou código digitado.')
-bullet(doc, 'Exibe foto, faixa, academia e status de inscrição.')
-bullet(doc, 'Registra o check-in presencial do atleta.')
+    'Interface para voluntários e equipe de apoio. Cobre desde a pré-confirmação '
+    'de pagamentos e pesagem nos dias anteriores ao evento até o credenciamento '
+    'com scanner de QR code no dia do torneio.')
+
+heading(doc, '6.1 Scanner QR Code e Check-in', 2)
+url(doc, 'Validação', 'http://127.0.0.1:8000/apoio/validar/')
+bullet(doc, 'Leitura de QR code do atleta via câmera ou código digitado manualmente.')
+bullet(doc, 'Exibe nome, faixa, academia e categoria do atleta.')
+bullet(doc, 'Registra o check-in presencial no dia do evento.')
 bullet(doc, 'Alerta visual se inscrição estiver pendente de aprovação ou pagamento.')
+bullet(doc, 'Lista dos últimos check-ins realizados visível em tempo real.')
+
+heading(doc, '6.2 Confirmação de Pagamento e Pesagem', 2)
+url(doc, 'Lista de inscrições (apoio)', 'http://127.0.0.1:8000/apoio/inscricoes/')
+body(doc,
+    'Tela de gestão pré-evento. Exibe alertas indicando se a janela de pagamento '
+    'e de pesagem estão abertas ou encerradas conforme configuração do campeonato.')
+bullet(doc, 'Painel com totais: inscritos, pagamentos confirmados e pesagens confirmadas.')
+bullet(doc, 'Filtros de exibição: Todos / Sem pagamento / Sem pesagem / Tudo OK.')
+body(doc, 'Por atleta na lista:', bold=True)
+bullet(doc, 'Coluna Pagamento — mostra status (Pendente / Comprovante enviado / Confirmado) com link para visualizar o comprovante.')
+bullet(doc, 'Botão "✓ Confirmar" para registrar o pagamento e timestamp automático da confirmação.')
+bullet(doc, 'Botão "Reverter" para desfazer uma confirmação incorreta.')
+bullet(doc, 'Coluna Pesagem — campo numérico para digitar o peso aferido (aceita vírgula ou ponto).')
+bullet(doc, 'Botão "⚖ Pesar" para confirmar; registra peso_aferido e timestamp.')
+bullet(doc, 'Botão "Reverter" para desfazer a pesagem.')
+bullet(doc, 'Ícone ✅ quando pagamento E pesagem estão confirmados; ⚠ se algum está pendente.')
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 7. RANKING
@@ -419,8 +457,13 @@ tabela_acesso(doc,
         ('/atleta/credencial/',                    'Atleta',       'Credencial com QR code'),
         ('/atleta/chaveamento/',                   'Atleta',       'Visualizar chaveamento'),
         ('/atleta/ranking/',                       'Público',      'Ranking geral'),
+        ('/organizacao/login/',                   'Organização',  'Login da organização (staff/superusuário)'),
+        ('/organizacao/logout/',                   'Organização',  'Logout da organização'),
         ('/apoio/',                                'Apoio',        'Home da equipe de apoio'),
-        ('/apoio/validar/',                        'Apoio',        'Validação de QR code / check-in'),
+        ('/apoio/inscricoes/',                     'Apoio',        'Lista de inscritos com pagamento e pesagem'),
+        ('/apoio/inscricoes/<id>/pagamento/',      'Apoio',        'Confirmar / reverter pagamento (POST)'),
+        ('/apoio/inscricoes/<id>/pesagem/',        'Apoio',        'Confirmar / reverter pesagem (POST)'),
+        ('/apoio/validar/<uuid>/',                 'Apoio',        'Validação de QR code / check-in'),
     ],
     ['URL', 'Perfil', 'Descrição']
 )

@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block title %}Apoio – Inscrições e Pesagem{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🛡 Apoio – <span>Inscrições e Pesagem</span></h1>
+  <a href="{% url 'apoio_home' %}" class="btn btn-outline">← Portal Apoio</a>
+</div>
+
+{% if campeonato_atual %}
+<div style="margin-bottom:0.75rem;color:var(--cinza);font-size:0.92rem;">
+  Campeonato: <strong>{{ campeonato_atual.nome }}</strong>
+  {% if campeonato_atual.data_evento %} — {{ campeonato_atual.data_evento|date:"d/m/Y" }}{% endif %}
+</div>
+
+<!-- Alertas de janela -->
+<div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem;">
+  {% if prazo_pagamento_ok %}
+  <div style="background:#eafaf1;border:1px solid #27ae60;border-radius:8px;padding:0.6rem 1rem;font-size:0.88rem;">
+    ✅ Prazo de pagamento aberto (fecha {{ campeonato_atual.prazo_pagamento_dias }} dia(s) antes do evento)
+  </div>
+  {% else %}
+  <div style="background:#fdf2f8;border:1px solid #c0392b;border-radius:8px;padding:0.6rem 1rem;font-size:0.88rem;">
+    🔒 Prazo de pagamento encerrado
+  </div>
+  {% endif %}
+
+  {% if janela_pesagem_ativa %}
+  <div style="background:#eafaf1;border:1px solid #27ae60;border-radius:8px;padding:0.6rem 1rem;font-size:0.88rem;">
+    ⚖ Janela de pesagem ATIVA (de {{ campeonato_atual.pesagem_inicio_dias }} a {{ campeonato_atual.pesagem_fim_dias }} dia(s) antes do evento)
+  </div>
+  {% else %}
+  <div style="background:#fef9e7;border:1px solid #f39c12;border-radius:8px;padding:0.6rem 1rem;font-size:0.88rem;">
+    ⏳ Janela de pesagem inativa (de {{ campeonato_atual.pesagem_inicio_dias }} a {{ campeonato_atual.pesagem_fim_dias }} dia(s) antes do evento)
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- Stats -->
+<div class="stats-grid" style="margin-bottom:1rem;">
+  <div class="stat-card"><span class="stat-num">{{ total }}</span><span class="stat-label">Inscritos</span></div>
+  <div class="stat-card"><span class="stat-num" style="color:#27ae60;">{{ total_pago }}</span><span class="stat-label">Pagamento Confirmado</span></div>
+  <div class="stat-card"><span class="stat-num" style="color:#2980b9;">{{ total_pesado }}</span><span class="stat-label">Pesagem Confirmada</span></div>
+</div>
+
+<!-- Filtros -->
+<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+  <a href="?filtro=todos" class="btn {% if filtro == 'todos' %}btn-primary{% else %}btn-outline{% endif %}">Todos</a>
+  <a href="?filtro=sem_pagamento" class="btn {% if filtro == 'sem_pagamento' %}btn-primary{% else %}btn-outline{% endif %}">Sem pagamento</a>
+  <a href="?filtro=sem_pesagem" class="btn {% if filtro == 'sem_pesagem' %}btn-primary{% else %}btn-outline{% endif %}">Sem pesagem</a>
+  <a href="?filtro=ok" class="btn {% if filtro == 'ok' %}btn-primary{% else %}btn-outline{% endif %}">Tudo OK</a>
+</div>
+
+{% if messages %}
+  {% for msg in messages %}
+  <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %}" style="margin-bottom:0.75rem;">{{ msg }}</div>
+  {% endfor %}
+{% endif %}
+
+<!-- Tabela de inscrições -->
+<div class="card">
+  <div class="card-body" style="padding:0;overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+      <thead>
+        <tr style="background:var(--preto);color:#fff;">
+          <th style="padding:0.75rem 1rem;text-align:left;">Atleta</th>
+          <th style="padding:0.75rem;text-align:left;">Academia</th>
+          <th style="padding:0.75rem;text-align:left;">Categoria</th>
+          <th style="padding:0.75rem;text-align:center;">Pagamento</th>
+          <th style="padding:0.75rem;text-align:center;">Pesagem</th>
+          <th style="padding:0.75rem;text-align:center;">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for insc in inscricoes %}
+        <tr style="border-bottom:1px solid #f0f0f0;">
+          <td style="padding:0.75rem 1rem;">
+            <strong>{{ insc.atleta.nome }}</strong>
+            <div style="font-size:0.8rem;color:var(--cinza);">{{ insc.atleta.get_faixa_display }} · {{ insc.atleta.peso }} kg</div>
+          </td>
+          <td style="padding:0.75rem;">{{ insc.atleta.academia }}</td>
+          <td style="padding:0.75rem;font-size:0.85rem;">{{ insc.categoria|default:"—" }}</td>
+
+          <!-- Pagamento -->
+          <td style="padding:0.75rem;text-align:center;">
+            {% if insc.pagamento_confirmado %}
+              <span class="badge badge-success">✓ Confirmado</span>
+              {% if insc.pagamento_confirmado_em %}
+              <div style="font-size:0.75rem;color:var(--cinza);">{{ insc.pagamento_confirmado_em|date:"d/m H:i" }}</div>
+              {% endif %}
+              <form method="post" action="{% url 'apoio_confirmar_pagamento' insc.pk %}" style="margin-top:0.3rem;">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <input type="hidden" name="acao" value="reverter">
+                <button type="submit" class="btn btn-sm btn-outline" style="font-size:0.75rem;padding:0.15rem 0.5rem;">Reverter</button>
+              </form>
+            {% else %}
+              {% if insc.comprovante_pagamento %}
+                <span class="badge badge-warning">Comprovante enviado</span>
+                {% if insc.comprovante_pagamento %}<div><a href="{{ insc.comprovante_pagamento.url }}" target="_blank" style="font-size:0.78rem;">📄 Ver</a></div>{% endif %}
+              {% elif insc.documento_bolsa %}
+                <span class="badge badge-warning">Doc. bolsa enviado</span>
+                <div><a href="{{ insc.documento_bolsa.url }}" target="_blank" style="font-size:0.78rem;">📄 Ver</a></div>
+              {% else %}
+                <span class="badge" style="background:#e74c3c;color:#fff;">Pendente</span>
+              {% endif %}
+              <form method="post" action="{% url 'apoio_confirmar_pagamento' insc.pk %}" style="margin-top:0.3rem;">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <input type="hidden" name="acao" value="confirmar">
+                <button type="submit" class="btn btn-sm btn-success" style="font-size:0.78rem;">✓ Confirmar</button>
+              </form>
+            {% endif %}
+          </td>
+
+          <!-- Pesagem -->
+          <td style="padding:0.75rem;text-align:center;">
+            {% if insc.pesagem_confirmada %}
+              <span class="badge badge-success">✓ {{ insc.peso_aferido }} kg</span>
+              {% if insc.pesagem_realizada_em %}
+              <div style="font-size:0.75rem;color:var(--cinza);">{{ insc.pesagem_realizada_em|date:"d/m H:i" }}</div>
+              {% endif %}
+              <form method="post" action="{% url 'apoio_confirmar_pesagem' insc.pk %}" style="margin-top:0.3rem;">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <input type="hidden" name="acao" value="reverter">
+                <button type="submit" class="btn btn-sm btn-outline" style="font-size:0.75rem;padding:0.15rem 0.5rem;">Reverter</button>
+              </form>
+            {% else %}
+              <span class="badge" style="background:#e67e22;color:#fff;">Aguardando</span>
+              <form method="post" action="{% url 'apoio_confirmar_pesagem' insc.pk %}" style="margin-top:0.35rem;display:flex;gap:0.3rem;justify-content:center;flex-wrap:wrap;">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <input type="hidden" name="acao" value="confirmar">
+                <input type="number" name="peso_aferido" step="0.1" min="20" max="200"
+                  placeholder="{{ insc.atleta.peso }}"
+                  style="width:72px;padding:0.2rem 0.4rem;border:1px solid #ccc;border-radius:4px;font-size:0.82rem;"
+                  required>
+                <button type="submit" class="btn btn-sm" style="background:#2980b9;color:#fff;font-size:0.78rem;">⚖ Pesar</button>
+              </form>
+            {% endif %}
+          </td>
+
+          <!-- Status geral -->
+          <td style="padding:0.75rem;text-align:center;">
+            {% if insc.pagamento_confirmado and insc.pesagem_confirmada %}
+              <span style="color:#27ae60;font-size:1.1rem;">✅</span>
+            {% else %}
+              <span style="color:#e74c3c;font-size:1.1rem;">⚠</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" style="padding:2rem;text-align:center;color:var(--cinza);">Nenhum atleta encontrado com este filtro.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

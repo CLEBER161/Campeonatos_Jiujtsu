@@ -50,6 +50,20 @@ class Campeonato(models.Model):
     ativo = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
 
+    # Prazos de pagamento e pesagem
+    prazo_pagamento_dias = models.PositiveIntegerField(
+        default=3,
+        help_text='Quantos dias antes do evento fecha o pagamento (ex: 3)',
+    )
+    pesagem_inicio_dias = models.PositiveIntegerField(
+        default=2,
+        help_text='Abertura da janela de pesagem: X dias antes do evento (ex: 2)',
+    )
+    pesagem_fim_dias = models.PositiveIntegerField(
+        default=1,
+        help_text='Encerramento da janela de pesagem: X dias antes do evento (ex: 1)',
+    )
+
     class Meta:
         verbose_name = 'Campeonato'
         verbose_name_plural = 'Campeonatos'
@@ -59,6 +73,24 @@ class Campeonato(models.Model):
         if self.data_evento:
             return f'{self.nome} ({self.data_evento:%d/%m/%Y})'
         return self.nome
+
+    @property
+    def prazo_pagamento_ok(self):
+        """True se ainda está dentro do prazo para pagar."""
+        from datetime import date, timedelta
+        if not self.data_evento:
+            return True
+        return date.today() <= self.data_evento - timedelta(days=self.prazo_pagamento_dias)
+
+    @property
+    def janela_pesagem_ativa(self):
+        """True se hoje está dentro da janela de pesagem."""
+        from datetime import date, timedelta
+        if not self.data_evento:
+            return False
+        inicio = self.data_evento - timedelta(days=self.pesagem_inicio_dias)
+        fim = self.data_evento - timedelta(days=self.pesagem_fim_dias)
+        return inicio <= date.today() <= fim
 
 
 class Categoria(models.Model):
@@ -234,6 +266,11 @@ class InscricaoCampeonato(models.Model):
     modalidade_inscricao = models.CharField(max_length=20, choices=MODALIDADE_INSCRICAO_CHOICES, default='regular')
     comprovante_pagamento = models.FileField(upload_to='comprovantes_pagamento/', null=True, blank=True)
     documento_bolsa = models.FileField(upload_to='documentos_bolsa/', null=True, blank=True)
+    pagamento_confirmado = models.BooleanField(default=False)
+    pagamento_confirmado_em = models.DateTimeField(null=True, blank=True)
+    pesagem_confirmada = models.BooleanField(default=False)
+    peso_aferido = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    pesagem_realizada_em = models.DateTimeField(null=True, blank=True)
     codigo = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     qr_code = models.ImageField(upload_to='qrcodes_inscricoes/', null=True, blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)

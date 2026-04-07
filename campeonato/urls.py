@@ -55,6 +55,9 @@ urlpatterns = [
 
     # Portal Apoio
     path('apoio/', views.apoio_home, name='apoio_home'),
+    path('apoio/inscricoes/', views.apoio_inscricoes, name='apoio_inscricoes'),
+    path('apoio/inscricoes/<int:pk>/pagamento/', views.apoio_confirmar_pagamento, name='apoio_confirmar_pagamento'),
+    path('apoio/inscricoes/<int:pk>/pesagem/', views.apoio_confirmar_pesagem, name='apoio_confirmar_pesagem'),
     path('apoio/validar/<uuid:codigo>/', views.apoio_validar, name='apoio_validar'),
     path('apoio/ajax/<uuid:codigo>/', views.apoio_checkin_ajax, name='apoio_checkin_ajax'),
 

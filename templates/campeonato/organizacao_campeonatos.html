@@ -19,6 +19,17 @@
       <label>Quantidade de tatames{{ campeonato_form.quantidade_tatames }}</label>
       <label style="display:flex;gap:0.5rem;align-items:center;">{{ campeonato_form.inscricoes_abertas }} Inscrições abertas</label>
       <label style="display:flex;gap:0.5rem;align-items:center;">{{ campeonato_form.ativo }} Campeonato ativo</label>
+
+      <hr style="border:none;border-top:1px solid #eee;margin:0.25rem 0;">
+      <div style="font-weight:600;font-size:0.9rem;color:var(--cinza);">⏱ Prazos e Pesagem</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;">
+        <label>Prazo pagamento (dias antes)<br>{{ campeonato_form.prazo_pagamento_dias }}</label>
+        <label>Pesagem início (dias antes)<br>{{ campeonato_form.pesagem_inicio_dias }}</label>
+        <label>Pesagem fim (dias antes)<br>{{ campeonato_form.pesagem_fim_dias }}</label>
+      </div>
+      <div style="font-size:0.8rem;color:var(--cinza);">
+        Exemplo: pagamento 3, pesagem de 2 a 1 dia antes → pagamento fecha 3 dias antes do evento; pesagem ocorre entre 2 e 1 dias antes.
+      </div>
       <div><button type="submit" class="btn btn-primary">Criar Campeonato</button></div>
     </form>
   </div>
