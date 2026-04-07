@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Inscrição em {{ campeonato.nome }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🧾 Inscrição no <span>{{ campeonato.nome }}</span></h1>
+  <a href="{% url 'minha_area_atleta' %}?campeonato={{ campeonato.pk }}" class="btn btn-outline">← Minha Área</a>
+</div>
+
+<div class="form-card" style="max-width:760px;">
+  <h2>Pagamento ou Bolsa</h2>
+  <div style="margin-bottom:1rem;padding:0.8rem 1rem;background:#f8f8f8;border-left:4px solid var(--vermelho);border-radius:6px;color:var(--cinza);font-size:0.92rem;">
+    O QR Code só é gerado depois que você envia o comprovante de pagamento ou, em caso de bolsa, o documento da academia.
+  </div>
+
+  <div style="margin-bottom:1rem;display:grid;gap:0.4rem;">
+    <div><strong>Atleta:</strong> {{ atleta.nome }}</div>
+    <div><strong>Categoria prevista:</strong> {{ inscricao.categoria|default:'Ainda não definida' }}</div>
+    <div><strong>Status atual:</strong> {% if inscricao.documentacao_ok %}<span style="color:#1e8449;font-weight:700;">QR liberado</span>{% else %}<span style="color:#b9770e;font-weight:700;">{{ inscricao.pendencia_documental }}</span>{% endif %}</div>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" style="display:grid;gap:0.9rem;">
+    {% csrf_token %}
+    <div class="form-group"><label>Modalidade da inscrição</label>{{ form.modalidade_inscricao }}</div>
+    <div class="form-group" id="grupo-comprovante"><label>Comprovante de pagamento</label>{{ form.comprovante_pagamento }}</div>
+    <div class="form-group" id="grupo-bolsa"><label>Documento da academia para bolsa</label>{{ form.documento_bolsa }}</div>
+
+    {% if form.errors %}
+      <div style="color:var(--vermelho);margin-bottom:1rem;">
+        {% for field in form %}{% for err in field.errors %}<p>{{ field.label }}: {{ err }}</p>{% endfor %}{% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="form-actions">
+      <a href="{% url 'minha_area_atleta' %}?campeonato={{ campeonato.pk }}" class="btn btn-outline">Cancelar</a>
+      <button type="submit" class="btn btn-primary">Salvar Inscrição</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  const modalidadeField = document.getElementById('id_modalidade_inscricao');
+  const grupoComprovante = document.getElementById('grupo-comprovante');
+  const grupoBolsa = document.getElementById('grupo-bolsa');
+
+  function atualizarCamposInscricao() {
+    const modalidade = modalidadeField.value;
+    grupoComprovante.style.display = modalidade === 'bolsa' ? 'none' : 'block';
+    grupoBolsa.style.display = modalidade === 'bolsa' ? 'block' : 'none';
+  }
+
+  modalidadeField.addEventListener('change', atualizarCamposInscricao);
+  atualizarCamposInscricao();
+</script>
+{% endblock %}

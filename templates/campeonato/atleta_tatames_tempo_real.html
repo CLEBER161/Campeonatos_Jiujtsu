@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% block title %}Tatames em Tempo Real{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>📺 Mesas dos Tatames em <span>Tempo Real</span></h1>
+  <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+    <button id="btn-alerta-sonoro" type="button" class="btn btn-success">Ativar alerta sonoro</button>
+    <a href="{% url 'minha_area_atleta' %}" class="btn btn-outline">← Minha Área</a>
+  </div>
+</div>
+
+<div style="margin-bottom:1rem;color:var(--cinza);font-size:0.95rem;">
+  Atualização automática a cada 10 segundos.
+</div>
+
+<div id="alerta-status" style="margin-bottom:1rem;color:var(--cinza);font-size:0.9rem;">
+  O alerta sonoro avisa quando sua luta entra em andamento nesta tela.
+</div>
+
+{% if luta_em_andamento_atleta %}
+<div style="background:#fdecea;border:1px solid #f4b5ad;border-left:6px solid #c0392b;border-radius:8px;padding:0.9rem 1rem;margin-bottom:1rem;">
+  <strong>🔴 Sua luta está em andamento:</strong>
+  {{ luta_em_andamento_atleta.atleta1.nome|default:'BYE' }} x {{ luta_em_andamento_atleta.atleta2.nome|default:'BYE' }}
+  {% if luta_em_andamento_atleta.baia %}
+  · chamada pela <strong>{{ luta_em_andamento_atleta.baia }}</strong>
+  {% endif %}
+  {% if luta_em_andamento_atleta.tatame %}
+  no <strong>{{ luta_em_andamento_atleta.tatame }}</strong>.
+  {% else %}
+  (sem tatame definido).
+  {% endif %}
+</div>
+{% elif proxima_luta_atleta %}
+<div style="background:#eaf2ff;border:1px solid #bcd6ff;border-left:6px solid #2980b9;border-radius:8px;padding:0.9rem 1rem;margin-bottom:1rem;">
+  <strong>⏭ Sua próxima luta:</strong>
+  {{ proxima_luta_atleta.atleta1.nome|default:'BYE' }} x {{ proxima_luta_atleta.atleta2.nome|default:'BYE' }}
+  · Rodada {{ proxima_luta_atleta.rodada }}
+  {% if proxima_luta_atleta.baia %}
+  · <strong>{{ proxima_luta_atleta.baia }}</strong>
+  {% endif %}
+  {% if proxima_luta_atleta.tatame %}
+  · <strong>{{ proxima_luta_atleta.tatame }}</strong>
+  {% else %}
+  · <strong>tatame ainda não definido</strong>
+  {% endif %}
+</div>
+{% else %}
+<div style="background:#f9f9f9;border:1px dashed #ddd;border-radius:8px;padding:0.9rem 1rem;margin-bottom:1rem;color:var(--cinza);">
+  Você não tem luta pendente no momento.
+</div>
+{% endif %}
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem;">
+  {% for painel in paineis %}
+  <div class="card" style="overflow:hidden;border:3px solid {% if painel.is_destaque %}#2980b9{% else %}transparent{% endif %};box-shadow:{% if painel.is_destaque %}0 0 0 3px rgba(41,128,185,0.15){% else %}var(--sombra){% endif %};">
+    <div class="card-header" style="background:{% if painel.is_destaque %}#1f5f8b{% else %}#111{% endif %};">
+      🥊 {{ painel.tatame }}
+      {% if painel.is_destaque %}
+      <span style="font-size:0.75rem;background:#f1c40f;color:#111;padding:3px 8px;border-radius:20px;font-weight:700;">Seu Tatame</span>
+      {% endif %}
+    </div>
+    <div class="card-body">
+      {% if painel.luta_atual %}
+      <div style="background:#fdecea;border:1px solid #f4b5ad;border-radius:8px;padding:0.8rem;margin-bottom:0.9rem;">
+        <div style="font-size:0.8rem;color:#c0392b;text-transform:uppercase;font-weight:700;margin-bottom:0.4rem;">Em andamento</div>
+        <div style="font-weight:700;">{{ painel.luta_atual.atleta1.nome|default:'BYE' }} x {{ painel.luta_atual.atleta2.nome|default:'BYE' }}</div>
+        <div style="font-size:0.82rem;color:#666;margin-bottom:0.4rem;">Rodada {{ painel.luta_atual.rodada }} · {{ painel.luta_atual.chave.categoria.nome }}</div>
+        <div style="font-size:0.88rem;line-height:1.45;">
+          <strong>Pts:</strong> {{ painel.luta_atual.pontos_atleta1 }}-{{ painel.luta_atual.pontos_atleta2 }} |
+          <strong>Van:</strong> {{ painel.luta_atual.vantagens_atleta1 }}-{{ painel.luta_atual.vantagens_atleta2 }} |
+          <strong>Pen:</strong> {{ painel.luta_atual.penalizacoes_atleta1 }}-{{ painel.luta_atual.penalizacoes_atleta2 }}
+        </div>
+      </div>
+      {% else %}
+      <div style="background:#f9f9f9;border:1px dashed #ddd;border-radius:8px;padding:0.8rem;margin-bottom:0.9rem;color:var(--cinza);">
+        Sem luta em andamento no momento.
+      </div>
+      {% endif %}
+
+      <div style="margin-bottom:0.8rem;">
+        <div style="font-size:0.82rem;color:var(--cinza);text-transform:uppercase;font-weight:700;margin-bottom:0.35rem;">Próximas</div>
+        {% for luta in painel.proximas %}
+          <div style="font-size:0.88rem;padding:0.35rem 0;border-bottom:1px solid #eee;">
+            R{{ luta.rodada }} - {{ luta.atleta1.nome|default:'BYE' }} x {{ luta.atleta2.nome|default:'BYE' }}
+          </div>
+        {% empty %}
+          <div style="font-size:0.88rem;color:var(--cinza);">Sem próximas lutas.</div>
+        {% endfor %}
+      </div>
+
+      <div>
+        <div style="font-size:0.82rem;color:var(--cinza);text-transform:uppercase;font-weight:700;margin-bottom:0.35rem;">Últimas finalizadas</div>
+        {% for luta in painel.finalizadas %}
+          <div style="font-size:0.84rem;padding:0.35rem 0;border-bottom:1px solid #eee;">
+            {{ luta.atleta1.nome|default:'BYE' }} x {{ luta.atleta2.nome|default:'BYE' }}
+            <div style="color:#666;">
+              Pts {{ luta.pontos_atleta1 }}-{{ luta.pontos_atleta2 }} | Van {{ luta.vantagens_atleta1 }}-{{ luta.vantagens_atleta2 }} | Pen {{ luta.penalizacoes_atleta1 }}-{{ luta.penalizacoes_atleta2 }}
+            </div>
+          </div>
+        {% empty %}
+          <div style="font-size:0.88rem;color:var(--cinza);">Sem lutas finalizadas.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="card"><div class="card-body" style="color:var(--cinza);">Nenhum tatame ativo encontrado.</div></div>
+  {% endfor %}
+</div>
+
+<script>
+  const lutaEmAndamento = {% if luta_em_andamento_atleta %}true{% else %}false{% endif %};
+  const storageKeyEnabled = 'tatame_alerta_sonoro_ativo';
+  const storageKeyLastState = 'tatame_alerta_estado';
+  const btnAlerta = document.getElementById('btn-alerta-sonoro');
+  const alertaStatus = document.getElementById('alerta-status');
+
+  function atualizarTextoBotao() {
+    const ativo = localStorage.getItem(storageKeyEnabled) === '1';
+    btnAlerta.textContent = ativo ? 'Desativar alerta sonoro' : 'Ativar alerta sonoro';
+    alertaStatus.textContent = ativo
+      ? 'Alerta sonoro ativado. Você será avisado quando sua luta entrar em andamento.'
+      : 'O alerta sonoro avisa quando sua luta entra em andamento nesta tela.';
+  }
+
+  function tocarBeep() {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) {
+      return;
+    }
+
+    const audioContext = new AudioContextClass();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    gainNode.gain.setValueAtTime(0.001, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.2, audioContext.currentTime + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.6);
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.6);
+
+    oscillator.onended = () => audioContext.close();
+  }
+
+  btnAlerta.addEventListener('click', () => {
+    const ativo = localStorage.getItem(storageKeyEnabled) === '1';
+    localStorage.setItem(storageKeyEnabled, ativo ? '0' : '1');
+    if (!ativo) {
+      tocarBeep();
+    }
+    atualizarTextoBotao();
+  });
+
+  const alertaAtivo = localStorage.getItem(storageKeyEnabled) === '1';
+  const ultimoEstado = localStorage.getItem(storageKeyLastState) === '1';
+  if (alertaAtivo && lutaEmAndamento && !ultimoEstado) {
+    tocarBeep();
+    alertaStatus.textContent = 'Sua luta entrou em andamento. Alerta sonoro disparado.';
+  }
+  localStorage.setItem(storageKeyLastState, lutaEmAndamento ? '1' : '0');
+  atualizarTextoBotao();
+
+  setTimeout(() => location.reload(), 10000);
+</script>
+{% endblock %}

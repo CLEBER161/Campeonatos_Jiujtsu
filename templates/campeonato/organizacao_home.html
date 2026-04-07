@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Organização | Campeonato Jiu-Jitsu{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>📋 Área da <span>Organização</span></h1>
+  <div style="display:flex;gap:0.5rem;align-items:center;">
+    <span style="color:var(--cinza);font-size:0.88rem;">{{ request.user.username }}</span>
+    <a href="{% url 'home' %}" class="btn btn-outline">← Início</a>
+    <a href="{% url 'organizacao_logout' %}" class="btn btn-outline" style="color:#c0392b;border-color:#c0392b;">Sair</a>
+  </div>
+</div>
+
+{% if campeonato_atual %}
+<div style="margin-bottom:1rem;color:var(--cinza);font-size:0.92rem;">Campeonato atual: <strong>{{ campeonato_atual.nome }}</strong></div>
+{% else %}
+<div style="margin-bottom:1rem;color:#b9770e;font-size:0.92rem;">Nenhum campeonato selecionado no momento.</div>
+{% endif %}
+
+<div class="stats-grid" style="margin-bottom:1rem;">
+  <div class="stat-card"><span class="stat-num">{{ total_atletas }}</span><span class="stat-label">Atletas</span></div>
+  <div class="stat-card"><span class="stat-num">{{ total_categorias }}</span><span class="stat-label">Categorias</span></div>
+  <div class="stat-card"><span class="stat-num">{{ total_lutas }}</span><span class="stat-label">Lutas</span></div>
+  <div class="stat-card"><span class="stat-num">{{ lutas_finalizadas }}</span><span class="stat-label">Finalizadas</span></div>
+  <div class="stat-card"><span class="stat-num">{{ checkins }}</span><span class="stat-label">Check-ins</span></div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;">
+  <a href="{% url 'organizacao_campeonatos' %}" style="text-decoration:none;">
+    <div class="card" style="height:100%;">
+      <div class="card-body" style="padding:1.1rem 1rem;">
+        <div style="font-size:1.2rem;font-weight:800;margin-bottom:0.35rem;">🏟 Campeonatos</div>
+        <div style="color:var(--cinza);font-size:0.92rem;">Criar, selecionar e controlar o campeonato atual.</div>
+      </div>
+    </div>
+  </a>
+
+  <a href="{% url 'organizacao_categorias' %}" style="text-decoration:none;">
+    <div class="card" style="height:100%;">
+      <div class="card-body" style="padding:1.1rem 1rem;">
+        <div style="font-size:1.2rem;font-weight:800;margin-bottom:0.35rem;">🧩 Categorias</div>
+        <div style="color:var(--cinza);font-size:0.92rem;">Gerar categorias completas e parametrizadas.</div>
+      </div>
+    </div>
+  </a>
+
+  <a href="{% url 'organizacao_estrutura' %}" style="text-decoration:none;">
+    <div class="card" style="height:100%;">
+      <div class="card-body" style="padding:1.1rem 1rem;">
+        <div style="font-size:1.2rem;font-weight:800;margin-bottom:0.35rem;">🏗 Estrutura</div>
+        <div style="color:var(--cinza);font-size:0.92rem;">Gerenciar baias e tatames do campeonato.</div>
+      </div>
+    </div>
+  </a>
+
+  <a href="{% url 'organizacao_arbitros' %}" style="text-decoration:none;">
+    <div class="card" style="height:100%;">
+      <div class="card-body" style="padding:1.1rem 1rem;">
+        <div style="font-size:1.2rem;font-weight:800;margin-bottom:0.35rem;">⚖ Árbitros</div>
+        <div style="color:var(--cinza);font-size:0.92rem;">Cadastro, aprovação e vínculo com tatames.</div>
+      </div>
+    </div>
+  </a>
+</div>
+
+<div class="card" style="margin-top:1rem;">
+  <div class="card-header">Acessos Operacionais</div>
+  <div class="card-body" style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+    <a href="{% url 'categoria_lista' %}" class="btn btn-dark">Categorias e Chaves</a>
+    <a href="{% url 'apoio_home' %}" class="btn btn-outline">Portal Apoio</a>
+    <a href="{% url 'mesario_home' %}" class="btn btn-outline">Portal do Mesário</a>
+    <a href="{% url 'arbitro_home' %}" class="btn btn-outline">Portal do Árbitro</a>
+    <a href="/admin/" target="_blank" class="btn btn-primary">Admin Completo</a>
+  </div>
+</div>
+{% endblock %}

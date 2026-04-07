@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Chave {{ chave }} | Campeonato Jiu-Jitsu{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>⚔ Chave — <span>{{ chave.categoria }}</span></h1>
+  <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+    <a href="{% url 'organizacao_tatames_chave' chave.pk %}" class="btn btn-primary">🎯 Distribuir Tatames</a>
+    <a href="{% url 'categoria_lista' %}" class="btn btn-outline">← Categorias</a>
+  </div>
+</div>
+
+<div class="card" style="overflow:visible;">
+  <div class="card-header">Bracket — {{ chave.nome }}</div>
+  <div class="card-body">
+    <div class="bracket-container">
+      {% for rodada, lutas in rodadas.items %}
+      <div class="bracket-round">
+        <div class="bracket-round-title">
+          {% if rodada == 1 %}Oitavas{% elif rodada == 2 %}Quartas{% elif rodada == 3 %}Semifinal{% elif rodada == 4 %}Final{% else %}Rodada {{ rodada }}{% endif %}
+        </div>
+        {% for luta in lutas %}
+        <div class="match-card">
+          {% if luta.baia or luta.tatame %}
+          <div style="padding:0.4rem 0.75rem;background:#f8f8f8;color:#333;font-size:0.78rem;font-weight:700;border-bottom:1px solid #ececec;display:flex;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;">
+            {% if luta.baia %}<span style="color:#b9770e;">{{ luta.baia }}</span>{% endif %}
+            {% if luta.tatame %}<span style="color:#1f5f8b;">{{ luta.tatame }}</span>{% endif %}
+          </div>
+          {% endif %}
+          <div class="match-player {% if luta.vencedor == luta.atleta1 %}vencedor{% elif luta.vencedor and luta.vencedor != luta.atleta1 %}perdedor{% endif %}">
+            <span>{{ luta.atleta1.nome|default:"BYE" }}</span>
+            {% if luta.resultado != 'pendente' and luta.resultado != 'bye' %}
+              <span class="pts">{{ luta.pontos_atleta1 }}pts</span>
+            {% endif %}
+          </div>
+          <div class="match-player {% if luta.vencedor == luta.atleta2 %}vencedor{% elif luta.vencedor and luta.vencedor != luta.atleta2 %}perdedor{% endif %}">
+            <span>{{ luta.atleta2.nome|default:"BYE" }}</span>
+            {% if luta.resultado != 'pendente' and luta.resultado != 'bye' %}
+              <span class="pts">{{ luta.pontos_atleta2 }}pts</span>
+            {% endif %}
+          </div>
+          {% if luta.resultado == 'pendente' and luta.atleta1 and luta.atleta2 %}
+          <div class="match-actions">
+            <a href="{% url 'luta_resultado' luta.pk %}" class="btn btn-sm btn-primary">Registrar</a>
+          </div>
+          {% elif luta.resultado == 'bye' %}
+          <div class="match-actions" style="color:var(--cinza);font-size:0.8rem;">BYE — passagem automática</div>
+          {% else %}
+          <div class="match-actions" style="color:#27ae60;font-size:0.8rem;">
+            ✔ {{ luta.get_resultado_display }} — Vencedor: {{ luta.vencedor.nome|default:"—" }}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Organização - Campeonatos{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🏟 Organização - <span>Campeonatos</span></h1>
+  <a href="{% url 'organizacao_home' %}" class="btn btn-outline">← Organização</a>
+</div>
+
+<div class="card" style="margin-bottom:1rem;">
+  <div class="card-header">Criar Campeonato</div>
+  <div class="card-body" style="max-width:760px;display:grid;gap:0.75rem;">
+    <form method="post" action="{% url 'organizacao_criar_campeonato' %}" style="display:grid;gap:0.75rem;">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{% url 'organizacao_campeonatos' %}">
+      <label>Nome{{ campeonato_form.nome }}</label>
+      <label>Local{{ campeonato_form.local }}</label>
+      <label>Data do evento{{ campeonato_form.data_evento }}</label>
+      <label>Quantidade de tatames{{ campeonato_form.quantidade_tatames }}</label>
+      <label style="display:flex;gap:0.5rem;align-items:center;">{{ campeonato_form.inscricoes_abertas }} Inscrições abertas</label>
+      <label style="display:flex;gap:0.5rem;align-items:center;">{{ campeonato_form.ativo }} Campeonato ativo</label>
+      <div><button type="submit" class="btn btn-primary">Criar Campeonato</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Selecionar Campeonato Atual</div>
+  <div class="card-body" style="display:grid;gap:0.75rem;">
+    {% for campeonato in campeonatos %}
+      <form method="post" action="{% url 'organizacao_selecionar_campeonato' %}" style="display:flex;justify-content:space-between;gap:1rem;align-items:center;flex-wrap:wrap;padding:0.75rem;border:1px solid #eee;border-radius:8px;">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'organizacao_campeonatos' %}">
+        <input type="hidden" name="campeonato_id" value="{{ campeonato.pk }}">
+        <div>
+          <strong>{{ campeonato.nome }}</strong>
+          <div style="color:var(--cinza);font-size:0.9rem;">{% if campeonato.data_evento %}{{ campeonato.data_evento|date:'d/m/Y' }}{% endif %}{% if campeonato.local %} · {{ campeonato.local }}{% endif %}</div>
+        </div>
+        <button type="submit" class="btn {% if campeonato_atual and campeonato_atual.pk == campeonato.pk %}btn-success{% else %}btn-outline{% endif %}">{% if campeonato_atual and campeonato_atual.pk == campeonato.pk %}Selecionado{% else %}Usar este{% endif %}</button>
+      </form>
+    {% empty %}
+      <div style="color:var(--cinza);">Nenhum campeonato cadastrado.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

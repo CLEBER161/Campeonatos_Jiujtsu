@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Cadastro de Árbitro{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>📝 Cadastro de <span>Árbitro</span></h1>
+  <a href="{% url 'arbitro_login' %}" class="btn btn-outline">← Login Árbitro</a>
+</div>
+
+<div class="form-card" style="max-width:560px;">
+  <h2>Solicitar Acesso</h2>
+  <form method="post" style="display:grid;gap:0.75rem;">
+    {% csrf_token %}
+
+    <label>
+      Nome completo
+      {{ form.nome }}
+    </label>
+    <label>
+      Usuário
+      {{ form.username }}
+    </label>
+    <label>
+      E-mail
+      {{ form.email }}
+    </label>
+    <label>
+      Senha
+      {{ form.password1 }}
+    </label>
+    <label>
+      Confirmar senha
+      {{ form.password2 }}
+    </label>
+
+    {% if form.errors %}
+    <div style="color:var(--vermelho);font-size:0.9rem;">
+      {% for field in form %}
+        {% for err in field.errors %}
+        <p>{{ field.label }}: {{ err }}</p>
+        {% endfor %}
+      {% endfor %}
+      {% for err in form.non_field_errors %}
+      <p>{{ err }}</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Enviar Solicitação</button>
+    </div>
+  </form>
+
+  <div style="margin-top:1rem;color:var(--cinza);font-size:0.9rem;">
+    Após enviar, sua conta ficará pendente até aprovação da organização. Quando aprovado, você recebe acesso à sua área de árbitro.
+  </div>
+</div>
+{% endblock %}

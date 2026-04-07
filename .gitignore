@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Django
+db.sqlite3
+*.sqlite3
+media/
+staticfiles/
+local_settings.py
+
+# Segredos / configuração local
+.env
+*.env
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Windows
+desktop.ini
+Thumbs.db
+
+# Documentos gerados
+Manual_Sistema_Campeonato_JiuJitsu.docx
+
+# Pytest / cobertura
+.coverage
+htmlcov/
+.pytest_cache/

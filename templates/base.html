@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Campeonato Jiu-Jitsu{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="{% url 'home' %}" class="navbar-brand">
+    🥋 <span>JIU</span>-JITSU
+  </a>
+  <div class="navbar-links">
+    <a href="{% url 'home' %}">Início</a>
+    <a href="{% if user.is_authenticated and user.perfil_atleta %}{% url 'minha_area_atleta' %}{% else %}{% url 'espaco_atletas' %}{% endif %}" {% if user.is_authenticated and user.perfil_atleta %}style="color:#2ecc71;"{% endif %}>🥋 Atletas</a>
+    {% if user.is_authenticated %}
+    {% if user.perfil_arbitro %}
+    <a href="{% if user.perfil_arbitro.funcao == 'mesario' %}{% url 'mesario_home' %}{% else %}{% url 'arbitro_home' %}{% endif %}" style="color:#3498db;">⚖ Minha Área {{ user.perfil_arbitro.get_funcao_display }}</a>
+    {% endif %}
+    <a href="{% if user.perfil_arbitro %}{% if user.perfil_arbitro.funcao == 'mesario' %}{% url 'mesario_logout' %}{% else %}{% url 'arbitro_logout' %}{% endif %}{% else %}{% url 'atleta_logout' %}{% endif %}">Sair</a>
+    {% else %}
+    <a href="{% url 'atleta_login' %}" style="color:#2ecc71;">Entrar Atleta</a>
+    <a href="{% url 'atleta_cadastro' %}">Criar Conta Atleta</a>
+    <a href="{% url 'mesario_login' %}" style="color:#1abc9c;">Entrar Mesário</a>
+    <a href="{% url 'arbitro_login' %}" style="color:#3498db;">Entrar Árbitro</a>
+    {% endif %}
+    <a href="{% url 'organizacao_home' %}">📋 Organização</a>
+    <a href="{% url 'apoio_home' %}" style="color:#f39c12;">🛡 Apoio</a>
+    <a href="{% url 'mesario_home' %}" style="color:#1abc9c;">🧾 Mesário</a>
+    <a href="{% url 'arbitro_home' %}" style="color:#3498db;">⚖ Árbitro</a>
+    <a href="/admin/" target="_blank">Admin</a>
+  </div>
+</nav>
+
+<div class="container">
+  {% if messages %}
+    <ul class="messages">
+      {% for msg in messages %}
+        <li class="{{ msg.tags }}">{{ msg }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Organização - Estrutura{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🏗 Organização - <span>Estrutura</span></h1>
+  <a href="{% url 'organizacao_home' %}" class="btn btn-outline">← Organização</a>
+</div>
+
+{% if campeonato_atual %}
+<div style="margin-bottom:1rem;color:var(--cinza);font-size:0.92rem;">Campeonato atual: <strong>{{ campeonato_atual.nome }}</strong></div>
+<form method="post" action="{% url 'organizacao_rebalancear_tatames' %}" style="margin-bottom:1rem;display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{% url 'organizacao_estrutura' %}">
+  <button type="submit" name="escopo" value="rodada1" class="btn btn-outline">⚙ Rebalancear apenas rodada 1</button>
+  <button type="submit" name="escopo" value="todas" class="btn btn-outline">⚙ Rebalancear todas as rodadas pendentes</button>
+  <span style="color:var(--cinza);font-size:0.86rem;">Redistribui automaticamente entre tatames ativos priorizando menor fila e agrupando categoria.</span>
+</form>
+{% endif %}
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem;">
+  <div class="card">
+    <div class="card-header">Criar Baia</div>
+    <div class="card-body">
+      <form method="post" action="{% url 'organizacao_criar_baia' %}" style="display:grid;gap:0.75rem;">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'organizacao_estrutura' %}">
+        <label>Número{{ baia_form.numero }}</label>
+        <label>Nome{{ baia_form.nome }}</label>
+        <label style="display:flex;gap:0.5rem;align-items:center;">{{ baia_form.ativa }} Baia ativa</label>
+        <div><button type="submit" class="btn btn-primary">Criar Baia</button></div>
+      </form>
+
+      <div style="margin-top:1rem;display:grid;gap:0.5rem;">
+        {% for baia in baias %}
+        <div class="card" style="box-shadow:none;border:1px solid rgba(0,0,0,0.08);">
+          <div class="card-body" style="padding:0.75rem 0.9rem;display:flex;justify-content:space-between;align-items:center;">
+            <div>{{ baia }}</div>
+            <span class="badge {% if baia.ativa %}badge-success{% else %}badge-warning{% endif %}">{% if baia.ativa %}Ativa{% else %}Inativa{% endif %}</span>
+          </div>
+        </div>
+        {% empty %}
+        <div style="color:var(--cinza);">Nenhuma baia cadastrada.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Criar Tatame com Árbitro Fixo</div>
+    <div class="card-body">
+      <form method="post" action="{% url 'organizacao_criar_tatame' %}" style="display:grid;gap:0.75rem;">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'organizacao_estrutura' %}">
+        <label>Número{{ tatame_form.numero }}</label>
+        <label>Nome{{ tatame_form.nome }}</label>
+        <label style="display:flex;gap:0.5rem;align-items:center;">{{ tatame_form.ativo }} Tatame ativo</label>
+        <label>Usar árbitro já cadastrado{{ tatame_form.arbitro_existente }}</label>
+        <label>Nome do árbitro{{ tatame_form.arbitro_nome }}</label>
+        <label>Usuário do árbitro{{ tatame_form.arbitro_username }}</label>
+        <label>E-mail do árbitro{{ tatame_form.arbitro_email }}</label>
+        <label>Senha{{ tatame_form.arbitro_password1 }}</label>
+        <label>Confirmar senha{{ tatame_form.arbitro_password2 }}</label>
+        <div><button type="submit" class="btn btn-primary">Criar Tatame e Vincular Árbitro</button></div>
+      </form>
+
+      <div style="margin-top:1rem;display:grid;gap:0.5rem;">
+        {% for tatame in tatames %}
+        <div class="card" style="box-shadow:none;border:1px solid rgba(0,0,0,0.08);">
+          <div class="card-body" style="padding:0.75rem 0.9rem;display:flex;justify-content:space-between;align-items:center;gap:0.75rem;">
+            <div>
+              <div>{{ tatame }}</div>
+              {% with eq=tatame_equipe_dict|default_if_none:'' %}
+              {% for tid, info in tatame_equipe_dict.items %}{% if tid == tatame.id %}
+              <div style="font-size:0.84rem;color:var(--cinza);">Mesário: {% if info.mesario %}{{ info.mesario.arbitro.nome }}{% else %}<em>não definido</em>{% endif %}</div>
+              <div style="font-size:0.84rem;color:var(--cinza);">Árbitro: {% if info.arbitro %}{{ info.arbitro.arbitro.nome }}{% else %}<em>não definido</em>{% endif %}</div>
+              {% endif %}{% endfor %}
+              {% endwith %}
+            </div>
+            <span class="badge {% if tatame.ativo %}badge-success{% else %}badge-warning{% endif %}">{% if tatame.ativo %}Ativo{% else %}Inativo{% endif %}</span>
+          </div>
+        </div>
+        {% empty %}
+        <div style="color:var(--cinza);">Nenhum tatame cadastrado.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

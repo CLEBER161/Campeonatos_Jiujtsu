@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% block title %}Relatório — {{ luta }} | Campeonato Jiu-Jitsu{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>📊 Relatório da Luta</h1>
+  <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+    <a href="javascript:history.back()" class="btn btn-outline">← Voltar</a>
+    <a href="{% url 'chave_detalhe' luta.chave.pk %}" class="btn btn-outline">Ver Chave</a>
+    <button onclick="window.print()" class="btn btn-outline">🖨 Imprimir</button>
+  </div>
+</div>
+
+<!-- ── CABEÇALHO DA LUTA ────────────────────────────────────────────── -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header">Informações da Luta</div>
+  <div style="padding:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
+    <div>
+      <div style="font-size:0.75rem;opacity:0.6;text-transform:uppercase;letter-spacing:1px;">Campeonato</div>
+      <div style="font-weight:700;">{{ luta.chave.categoria.campeonato }}</div>
+    </div>
+    <div>
+      <div style="font-size:0.75rem;opacity:0.6;text-transform:uppercase;letter-spacing:1px;">Categoria</div>
+      <div style="font-weight:700;">{{ luta.chave.categoria.nome }}</div>
+    </div>
+    <div>
+      <div style="font-size:0.75rem;opacity:0.6;text-transform:uppercase;letter-spacing:1px;">Chave / Rodada</div>
+      <div style="font-weight:700;">{{ luta.chave.nome }} — Rodada {{ luta.rodada }}</div>
+    </div>
+    <div>
+      <div style="font-size:0.75rem;opacity:0.6;text-transform:uppercase;letter-spacing:1px;">Tatame</div>
+      <div style="font-weight:700;">{{ luta.tatame|default:"—" }}</div>
+    </div>
+    <div>
+      <div style="font-size:0.75rem;opacity:0.6;text-transform:uppercase;letter-spacing:1px;">Status</div>
+      <div><span style="font-weight:700;">{{ luta.get_status_display }}</span></div>
+    </div>
+    <div>
+      <div style="font-size:0.75rem;opacity:0.6;text-transform:uppercase;letter-spacing:1px;">Resultado</div>
+      <div style="font-weight:700;">{{ luta.get_resultado_display }}</div>
+    </div>
+    {% if luta.arbitro %}
+    <div>
+      <div style="font-size:0.75rem;opacity:0.6;text-transform:uppercase;letter-spacing:1px;">Árbitro</div>
+      <div style="font-weight:700;">{{ luta.arbitro.nome }}</div>
+    </div>
+    {% endif %}
+    {% if luta.realizada_em %}
+    <div>
+      <div style="font-size:0.75rem;opacity:0.6;text-transform:uppercase;letter-spacing:1px;">Realizada em</div>
+      <div style="font-weight:700;">{{ luta.realizada_em|date:"d/m/Y H:i" }}</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ── PLACAR FINAL ─────────────────────────────────────────────────── -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header">Placar Final</div>
+  <div style="padding:1.5rem;display:grid;grid-template-columns:1fr auto 1fr;gap:1rem;align-items:center;text-align:center;">
+
+    <!-- Atleta 1 -->
+    <div style="{% if luta.vencedor == luta.atleta1 %}border:2px solid #27ae60;border-radius:12px;padding:1rem;{% else %}padding:1rem;opacity:0.8;{% endif %}">
+      {% if luta.vencedor == luta.atleta1 %}<div style="color:#27ae60;font-size:0.75rem;font-weight:700;letter-spacing:1px;margin-bottom:0.5rem;">🏆 VENCEDOR</div>{% endif %}
+      <div style="font-size:1.25rem;font-weight:800;">{{ luta.atleta1.nome|default:"BYE" }}</div>
+      {% if luta.atleta1 %}<div style="font-size:0.85rem;opacity:0.65;">{{ luta.atleta1.academia }}</div>{% endif %}
+      <div style="font-size:2.5rem;font-weight:900;color:#2980b9;margin:0.5rem 0;">{{ luta.pontos_atleta1 }}</div>
+      <div style="font-size:0.8rem;display:flex;justify-content:center;gap:1rem;">
+        <span>Van: <strong>{{ luta.vantagens_atleta1 }}</strong></span>
+        <span>Pen: <strong>{{ luta.penalizacoes_atleta1 }}</strong></span>
+      </div>
+    </div>
+
+    <div style="font-size:1.4rem;font-weight:900;opacity:0.3;">VS</div>
+
+    <!-- Atleta 2 -->
+    <div style="{% if luta.vencedor == luta.atleta2 %}border:2px solid #27ae60;border-radius:12px;padding:1rem;{% else %}padding:1rem;opacity:0.8;{% endif %}">
+      {% if luta.vencedor == luta.atleta2 %}<div style="color:#27ae60;font-size:0.75rem;font-weight:700;letter-spacing:1px;margin-bottom:0.5rem;">🏆 VENCEDOR</div>{% endif %}
+      <div style="font-size:1.25rem;font-weight:800;">{{ luta.atleta2.nome|default:"BYE" }}</div>
+      {% if luta.atleta2 %}<div style="font-size:0.85rem;opacity:0.65;">{{ luta.atleta2.academia }}</div>{% endif %}
+      <div style="font-size:2.5rem;font-weight:900;color:#c0392b;margin:0.5rem 0;">{{ luta.pontos_atleta2 }}</div>
+      <div style="font-size:0.8rem;display:flex;justify-content:center;gap:1rem;">
+        <span>Van: <strong>{{ luta.vantagens_atleta2 }}</strong></span>
+        <span>Pen: <strong>{{ luta.penalizacoes_atleta2 }}</strong></span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── ESTATÍSTICAS POR ATLETA ──────────────────────────────────────── -->
+{% if acoes %}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+
+  <!-- Stats Atleta 1 -->
+  <div class="card">
+    <div class="card-header" style="background:#2980b9;">📊 {{ luta.atleta1.nome|default:"Atleta 1" }}</div>
+    <div style="padding:1rem;">
+      <div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--cinza-claro);">
+        <span>Pontos via posição</span><strong>{{ stats_a1.pontos_acoes }}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--cinza-claro);">
+        <span>Vantagens registradas</span><strong>{{ stats_a1.vantagens }}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--cinza-claro);">
+        <span>Penalizações recebidas</span><strong>{{ stats_a1.penalizacoes }}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:0.4rem 0;">
+        <span>Finalizações</span><strong>{{ stats_a1.finalizacoes }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Atleta 2 -->
+  <div class="card">
+    <div class="card-header" style="background:#c0392b;">📊 {{ luta.atleta2.nome|default:"Atleta 2" }}</div>
+    <div style="padding:1rem;">
+      <div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--cinza-claro);">
+        <span>Pontos via posição</span><strong>{{ stats_a2.pontos_acoes }}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--cinza-claro);">
+        <span>Vantagens registradas</span><strong>{{ stats_a2.vantagens }}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--cinza-claro);">
+        <span>Penalizações recebidas</span><strong>{{ stats_a2.penalizacoes }}</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:0.4rem 0;">
+        <span>Finalizações</span><strong>{{ stats_a2.finalizacoes }}</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LINHA DO TEMPO DE AÇÕES ──────────────────────────────────────── -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header">🕐 Linha do Tempo — Ações Registradas</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:130px;">Horário</th>
+        <th>Atleta</th>
+        <th>Ação / Posição</th>
+        <th>Categoria</th>
+        <th>Pontos</th>
+        <th>Registrado por</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for acao in acoes %}
+      <tr>
+        <td style="font-size:0.82rem;color:var(--cinza);">{{ acao.registrado_em|date:"H:i:s" }}</td>
+        <td>
+          <strong
+            style="color:{% if acao.atleta == luta.atleta1 %}#2980b9{% else %}#c0392b{% endif %};">
+            {{ acao.atleta.nome|default:"—" }}
+          </strong>
+        </td>
+        <td>
+          <strong>{{ acao.tipo_acao.nome }}</strong>
+          {% if acao.observacao %}<div style="font-size:0.78rem;color:var(--cinza);">{{ acao.observacao }}</div>{% endif %}
+        </td>
+        <td>
+          <span style="
+            font-size:0.75rem;
+            padding:2px 8px;
+            border-radius:10px;
+            font-weight:700;
+            background:
+              {% if acao.tipo_acao.categoria == 'pontos' %}#2980b9
+              {% elif acao.tipo_acao.categoria == 'vantagem' %}#f39c12
+              {% elif acao.tipo_acao.categoria == 'penalizacao' %}#e67e22
+              {% else %}#c0392b{% endif %};
+            color:#fff;">
+            {{ acao.tipo_acao.get_categoria_display }}
+          </span>
+        </td>
+        <td style="font-weight:700;text-align:center;">
+          {% if acao.tipo_acao.pontos %}
+            <span style="color:#27ae60;">+{{ acao.tipo_acao.pontos }}</span>
+          {% elif acao.tipo_acao.categoria == 'finalizacao' %}
+            <span style="color:#c0392b;">FIN</span>
+          {% elif acao.tipo_acao.categoria == 'vantagem' %}
+            <span style="color:#f39c12;">VAN</span>
+          {% elif acao.tipo_acao.categoria == 'penalizacao' %}
+            <span style="color:#e67e22;">PEN</span>
+          {% else %}—{% endif %}
+        </td>
+        <td style="font-size:0.82rem;color:var(--cinza);">{{ acao.registrado_por.nome|default:"Mesa" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% else %}
+<div class="card" style="margin-bottom:1.5rem;">
+  <div style="padding:2rem;text-align:center;color:var(--cinza);">
+    Nenhuma ação por posição foi registrada para esta luta.
+  </div>
+</div>
+{% endif %}
+
+<style>
+  @media print {
+    .page-header .btn, .btn { display: none !important; }
+    body { background: white !important; color: black !important; }
+  }
+</style>
+
+{% endblock %}

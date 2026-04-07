@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Credenciais das Mesas{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🖨 Credenciais das <span>Mesas</span></h1>
+  <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+    <a href="{% url 'organizacao_arbitros' %}" class="btn btn-outline">← Voltar</a>
+    <button onclick="window.print()" class="btn btn-primary">Imprimir</button>
+  </div>
+</div>
+
+{% if campeonato_atual %}
+<div style="margin-bottom:1rem;color:var(--cinza);font-size:0.95rem;">Campeonato atual: <strong>{{ campeonato_atual.nome }}</strong></div>
+{% endif %}
+
+<div class="card" style="margin-bottom:1rem;">
+  <div class="card-header">Lista de Acesso por Mesa</div>
+  <div class="card-body" style="display:grid;gap:0.9rem;">
+    {% for vinculo in credenciais %}
+    <div style="border:1px dashed rgba(0,0,0,0.25);border-radius:10px;padding:1rem;display:grid;gap:0.35rem;background:#fff;">
+      <div style="font-size:1.15rem;font-weight:800;">{{ vinculo.tatame }}</div>
+      <div><strong>Mesário:</strong> {{ vinculo.arbitro.nome }}</div>
+      <div><strong>Usuário:</strong> {{ vinculo.arbitro.usuario.username }}</div>
+      <div><strong>Senha:</strong> {{ vinculo.arbitro.senha_acesso|default:'—' }}</div>
+      <div><strong>Login:</strong> /mesario/login/</div>
+      <div><strong>Mesa:</strong> /mesario/tatame/{{ vinculo.tatame.pk }}/</div>
+    </div>
+    {% empty %}
+    <div style="color:var(--cinza);">Nenhum mesário vinculado às mesas do campeonato atual.</div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+@media print {
+  .navbar, .messages, .page-header .btn {
+    display: none !important;
+  }
+  .container {
+    max-width: 100%;
+    padding: 0;
+  }
+  .card {
+    box-shadow: none;
+    border: none;
+  }
+}
+</style>
+{% endblock %}

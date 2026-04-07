@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}Organização - Equipe de Mesa e Árbitros{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>⚖ Organização - <span>Equipe de Mesa e Árbitros</span></h1>
+  <a href="{% url 'organizacao_home' %}" class="btn btn-outline">← Organização</a>
+</div>
+
+{% if campeonato_atual %}
+<div style="margin-bottom:1rem;color:var(--cinza);font-size:0.92rem;">Campeonato atual: <strong>{{ campeonato_atual.nome }}</strong></div>
+{% endif %}
+
+<div style="margin-bottom:1rem;display:flex;gap:0.75rem;flex-wrap:wrap;">
+  <a href="{% url 'organizacao_credenciais_mesarios' %}" class="btn btn-outline" target="_blank">🖨 Imprimir Credenciais das Mesas</a>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem;">
+  <div class="card">
+    <div class="card-header">Criar Perfil da Equipe</div>
+    <div class="card-body">
+      <form method="post" action="{% url 'organizacao_criar_arbitro' %}" style="display:grid;gap:0.75rem;">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'organizacao_arbitros' %}">
+        <label>Função<select name="funcao" class="form-control">{% for valor, label in funcoes_equipe %}<option value="{{ valor }}">{{ label }}</option>{% endfor %}</select></label>
+        <label>Nome{{ arbitro_form.nome }}</label>
+        <label>Usuário{{ arbitro_form.username }}</label>
+        <label>E-mail{{ arbitro_form.email }}</label>
+        <label style="display:flex;gap:0.5rem;align-items:center;">
+          <input type="checkbox" name="gerar_senha_automatica" checked style="width:18px;height:18px;">
+          Gerar senha automática para mesário
+        </label>
+        <label>Senha{{ arbitro_form.password1 }}</label>
+        <label>Confirmar senha{{ arbitro_form.password2 }}</label>
+        <div><button type="submit" class="btn btn-primary">Criar Perfil</button></div>
+      </form>
+
+      <div style="margin-top:0.75rem;color:var(--cinza);font-size:0.88rem;">
+        Se a função for <strong>Mesário</strong> e a opção acima estiver marcada, o sistema gera a senha automaticamente e inclui na folha de impressão das mesas.
+      </div>
+
+      <div style="margin-top:1rem;display:grid;gap:0.5rem;">
+        {% for arbitro in arbitros %}
+        <div class="card" style="box-shadow:none;border:1px solid rgba(0,0,0,0.08);">
+          <div class="card-body" style="padding:0.75rem 0.9rem;display:flex;justify-content:space-between;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+            <div>
+              <strong>{{ arbitro.nome }}</strong>
+              <div style="font-size:0.84rem;color:var(--cinza);">@{{ arbitro.usuario.username }}</div>
+              <div style="font-size:0.84rem;color:var(--cinza);">Função: {{ arbitro.get_funcao_display }}</div>
+              {% if arbitro.eh_mesario and arbitro.senha_acesso %}<div style="font-size:0.84rem;color:var(--cinza);">Senha: {{ arbitro.senha_acesso }}</div>{% endif %}
+            </div>
+            <div style="display:flex;gap:0.4rem;align-items:center;flex-wrap:wrap;">
+              <span class="badge {% if arbitro.ativo %}badge-success{% else %}badge-warning{% endif %}">{% if arbitro.ativo %}Aprovado{% else %}Pendente{% endif %}</span>
+              <form method="post" action="{% url 'organizacao_status_arbitro' arbitro.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'organizacao_arbitros' %}">
+                <input type="hidden" name="acao" value="{% if arbitro.ativo %}inativar{% else %}aprovar{% endif %}">
+                <button type="submit" class="btn btn-sm {% if arbitro.ativo %}btn-outline{% else %}btn-success{% endif %}">{% if arbitro.ativo %}Inativar{% else %}Aprovar{% endif %}</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div style="color:var(--cinza);">Nenhum árbitro cadastrado.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Vincular Mesário ao Tatame</div>
+    <div class="card-body">
+      <form method="post" action="{% url 'organizacao_vincular_arbitro_tatame' %}" style="display:grid;gap:0.75rem;">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'organizacao_arbitros' %}">
+        <label>Mesário{{ form_mesario.arbitro }}</label>
+        <label>Tatame{{ form_mesario.tatame }}</label>
+        <div><button type="submit" class="btn btn-primary">Salvar Vínculo</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Vincular Árbitro ao Tatame</div>
+    <div class="card-body">
+      <form method="post" action="{% url 'organizacao_vincular_arbitro_tatame' %}" style="display:grid;gap:0.75rem;">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'organizacao_arbitros' %}">
+        <label>Árbitro{{ form_arbitro.arbitro }}</label>
+        <label>Tatame{{ form_arbitro.tatame }}</label>
+        <div><button type="submit" class="btn btn-primary">Salvar Vínculo</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Equipe por Tatame</div>
+    <div class="card-body">
+      <div style="display:grid;gap:0.5rem;">
+        {% for item in tatame_equipe %}
+        <div class="card" style="box-shadow:none;border:1px solid rgba(0,0,0,0.08);">
+          <div class="card-body" style="padding:0.75rem 0.9rem;">
+            <strong>{{ item.tatame }}</strong>
+            <div style="margin-top:0.4rem;display:flex;gap:1rem;flex-wrap:wrap;font-size:0.88rem;">
+              <div>
+                <span style="color:var(--cinza);">Mesário:</span>
+                {% if item.mesario %}
+                  {{ item.mesario.arbitro.nome }}
+                  <form method="post" action="{% url 'organizacao_remover_vinculo_arbitro' item.mesario.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{% url 'organizacao_arbitros' %}">
+                    <button type="submit" class="btn btn-sm btn-outline" style="padding:0.1rem 0.5rem;font-size:0.78rem;">×</button>
+                  </form>
+                {% else %}
+                  <span style="color:#b9770e;">não definido</span>
+                {% endif %}
+              </div>
+              <div>
+                <span style="color:var(--cinza);">Árbitro:</span>
+                {% if item.arbitro %}
+                  {{ item.arbitro.arbitro.nome }}
+                  <form method="post" action="{% url 'organizacao_remover_vinculo_arbitro' item.arbitro.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{% url 'organizacao_arbitros' %}">
+                    <button type="submit" class="btn btn-sm btn-outline" style="padding:0.1rem 0.5rem;font-size:0.78rem;">×</button>
+                  </form>
+                {% else %}
+                  <span style="color:#b9770e;">não definido</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div style="color:var(--cinza);">Nenhum vínculo criado para o campeonato atual.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

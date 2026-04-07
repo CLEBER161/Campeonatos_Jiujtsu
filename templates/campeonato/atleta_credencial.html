@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Credencial — {{ atleta.nome }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🎫 Credencial do Atleta</h1>
+  <div style="display:flex;gap:0.75rem;">
+    <button onclick="window.print()" class="btn btn-primary">🖨 Imprimir</button>
+    <a href="{% url 'atleta_detalhe' atleta.pk %}" class="btn btn-outline">← Voltar</a>
+  </div>
+</div>
+
+<style>
+  @media print {
+    .navbar, .page-header, .btn { display: none !important; }
+    body { background: white; }
+    .credencial-card { box-shadow: none; border: 2px solid #000; }
+  }
+</style>
+
+<div class="credencial-card" style="
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+  max-width: 480px;
+  margin: 0 auto;
+  overflow: hidden;
+">
+  <!-- Cabeçalho vermelho -->
+  <div style="background: linear-gradient(135deg, #0d0d0d, #c0392b); padding: 1.5rem 2rem; color: #fff; text-align: center;">
+    <div style="font-size: 1.1rem; font-weight: 700; letter-spacing: 2px; opacity: 0.8;">CAMPEONATO JIU-JITSU</div>
+    <div style="font-size: 0.85rem; opacity: 0.6; margin-top: 2px;">CREDENCIAL OFICIAL DO ATLETA</div>
+  </div>
+
+  <!-- Corpo -->
+  <div style="padding: 2rem; display: flex; gap: 1.5rem; align-items: center;">
+    <!-- QR Code -->
+    <div style="text-align: center; flex-shrink: 0;">
+      {% if inscricao.qr_code %}
+        <img src="{{ inscricao.qr_code.url }}" alt="QR Code" style="width: 150px; height: 150px; display: block; border: 3px solid #0d0d0d; border-radius: 8px;">
+      {% else %}
+        <div style="width:150px;height:150px;background:#eee;display:flex;align-items:center;justify-content:center;border-radius:8px;color:#999;">Sem QR</div>
+      {% endif %}
+      <div style="font-size: 0.7rem; color: #aaa; margin-top: 4px;">Escaneie para validar</div>
+    </div>
+
+    <!-- Info -->
+    <div style="flex: 1;">
+      <div style="font-size: 1.3rem; font-weight: 800; color: #0d0d0d; line-height: 1.2; margin-bottom: 0.75rem;">{{ atleta.nome }}</div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+        <div style="display:flex; gap: 0.5rem; align-items: center;">
+          <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; width: 70px;">Faixa</span>
+          <span class="badge-faixa faixa-{{ atleta.faixa }}" style="font-size:0.8rem;">{{ atleta.get_faixa_display }}</span>
+        </div>
+        <div style="display:flex; gap: 0.5rem; align-items: center;">
+          <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; width: 70px;">Academia</span>
+          <strong style="font-size: 0.9rem;">{{ atleta.academia }}</strong>
+        </div>
+        <div style="display:flex; gap: 0.5rem; align-items: center;">
+          <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; width: 70px;">Peso</span>
+          <strong style="font-size: 0.9rem;">{{ atleta.peso }} kg</strong>
+        </div>
+        <div style="display:flex; gap: 0.5rem; align-items: center;">
+          <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; width: 70px;">Sexo</span>
+          <strong style="font-size: 0.9rem;">{{ atleta.get_sexo_display }}</strong>
+        </div>
+        {% if inscricao.categoria %}
+        <div style="display:flex; gap: 0.5rem; align-items: center;">
+          <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; width: 70px;">Categoria</span>
+          <strong style="font-size: 0.9rem;">{{ inscricao.categoria.nome }}</strong>
+        </div>
+        {% endif %}
+        <div style="display:flex; gap: 0.5rem; align-items: center;">
+          <span style="font-size: 0.75rem; color: #888; text-transform: uppercase; width: 70px;">Evento</span>
+          <strong style="font-size: 0.9rem;">{{ campeonato_atual.nome }}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rodapé com status check-in -->
+  <div style="background: #f5f5f5; padding: 0.75rem 2rem; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee;">
+    <span style="font-size: 0.8rem; color: #aaa;">ID: {{ inscricao.codigo|stringformat:"s"|slice:":8" }}...</span>
+    {% if ja_fez_checkin %}
+      <span style="background: #d5f5e3; color: #1e8449; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">✔ CHECK-IN REALIZADO</span>
+    {% else %}
+      <span style="background: #fef9e7; color: #9a7d0a; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">⏳ AGUARDANDO CHECK-IN</span>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}Distribuir Baias e Tatames | {{ chave.categoria }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🎯 Distribuir Baias e Tatames</h1>
+  <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+    <a href="{% url 'chave_detalhe' chave.pk %}" class="btn btn-outline">← Voltar à Chave</a>
+    <a href="{% url 'categoria_lista' %}" class="btn btn-outline">Categorias</a>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:1.2rem;">
+  <div class="card-body">
+    <h2 style="margin-bottom:0.35rem;">{{ chave.nome }}</h2>
+    <p style="color:var(--cinza);">Categoria: <strong>{{ chave.categoria }}</strong></p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Lutas da Chave</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Rodada</th>
+        <th>Atleta 1</th>
+        <th>Atleta 2</th>
+        <th>Baia Atual</th>
+        <th>Tatame Atual</th>
+        <th>Definir Localização</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for luta in lutas %}
+      <tr>
+        <td><strong>{{ luta.rodada }}</strong></td>
+        <td>{{ luta.atleta1.nome|default:'BYE' }}</td>
+        <td>{{ luta.atleta2.nome|default:'BYE' }}</td>
+        <td>
+          {% if luta.baia %}
+            <span style="color:#f39c12;font-weight:700;">{{ luta.baia }}</span>
+          {% else %}
+            <span style="color:var(--cinza);">Não definida</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if luta.tatame %}
+            <span style="color:#2980b9;font-weight:700;">{{ luta.tatame }}</span>
+          {% else %}
+            <span style="color:var(--cinza);">Não definido</span>
+          {% endif %}
+        </td>
+        <td>
+          <form method="post" style="display:grid;grid-template-columns:1fr 1fr auto;gap:0.5rem;align-items:center;">
+            {% csrf_token %}
+            <input type="hidden" name="luta_id" value="{{ luta.pk }}">
+            <select name="baia_pk" class="form-control" style="min-width:180px;">
+              <option value="">--- Sem baia ---</option>
+              {% for baia in baias %}
+              <option value="{{ baia.pk }}" {% if luta.baia_id == baia.pk %}selected{% endif %}>{{ baia }}</option>
+              {% endfor %}
+            </select>
+            <select name="tatame_pk" class="form-control" style="min-width:180px;">
+              <option value="">--- Sem tatame ---</option>
+              {% for tatame in tatames %}
+              <option value="{{ tatame.pk }}" {% if luta.tatame_id == tatame.pk %}selected{% endif %}>{{ tatame }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm btn-primary">Salvar</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" style="text-align:center;color:var(--cinza);padding:2rem;">Nenhuma luta nesta chave.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

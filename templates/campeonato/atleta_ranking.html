@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Ranking - {{ atleta.nome }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Meu Ranking</h1>
+  <a href="{% url 'atleta_detalhe' atleta.pk %}" class="btn btn-outline">← Perfil</a>
+</div>
+
+{% if inscricao and inscricao.campeonato %}
+<div style="margin-bottom:1rem;color:var(--cinza);font-size:0.92rem;">Ranking referente ao campeonato {{ inscricao.campeonato.nome }}.</div>
+{% endif %}
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <span class="stat-num">{% if minha_geral %}{{ minha_geral.posicao }}{% else %}-{% endif %}</span>
+    <span class="stat-label">Posicao Geral</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-num">{% if minha_categoria %}{{ minha_categoria.posicao }}{% else %}-{% endif %}</span>
+    <span class="stat-label">Posicao na Categoria</span>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;">
+  <div class="card">
+    <div class="card-header">Top Ranking da Categoria</div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Atleta</th>
+          <th>V</th>
+          <th>D</th>
+          <th>Saldo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in ranking_categoria %}
+        <tr style="{% if item.atleta.id == atleta.id %}background:#fdecea;{% endif %}">
+          <td><strong>{{ item.posicao }}</strong></td>
+          <td>{{ item.atleta.nome }}</td>
+          <td>{{ item.vitorias }}</td>
+          <td>{{ item.derrotas }}</td>
+          <td>{{ item.saldo }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" style="text-align:center;color:var(--cinza);">Sem ranking para a categoria.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Top Ranking Geral</div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Atleta</th>
+          <th>V</th>
+          <th>D</th>
+          <th>Saldo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in ranking_geral %}
+        <tr style="{% if item.atleta.id == atleta.id %}background:#eaf2ff;{% endif %}">
+          <td><strong>{{ item.posicao }}</strong></td>
+          <td>{{ item.atleta.nome }}</td>
+          <td>{{ item.vitorias }}</td>
+          <td>{{ item.derrotas }}</td>
+          <td>{{ item.saldo }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,570 @@
+{% extends 'base.html' %}
+{% block title %}Árbitro — {{ tatame }} | Campeonato Jiu-Jitsu{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>⚖ {{ tatame }}</h1>
+  <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+    <a href="{% url home_url|default:'mesario_home' %}" class="btn btn-outline">← Tatames</a>
+    {% if arbitro %}<span class="btn btn-outline" style="pointer-events:none;">Operador: {{ arbitro.nome }}</span>{% endif %}
+    <a href="{% url 'placar_tatame' tatame.pk %}" target="_blank" class="btn btn-outline" title="Abrir telão de placar em nova aba">📺 Telão</a>
+  </div>
+</div>
+
+<!-- LUTA ATUAL -->
+{% if luta_atual %}
+<div style="
+  background: linear-gradient(135deg, #0d0d0d, #c0392b);
+  color: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 6px 24px rgba(192,57,43,0.4);
+">
+  <div style="text-align:center; font-size:0.85rem; letter-spacing:2px; opacity:0.7; margin-bottom:1rem; text-transform:uppercase;">
+    🔴 Luta em Andamento
+  </div>
+  <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem; align-items: center; text-align:center;">
+    <div>
+      <div style="font-size: 1.5rem; font-weight: 800;">{{ luta_atual.atleta1.nome|default:"BYE" }}</div>
+      <div style="opacity:0.7; font-size:0.9rem;">{{ luta_atual.atleta1.academia|default:"" }}</div>
+      <div style="margin-top:0.5rem;">
+        <span class="badge-faixa faixa-{{ luta_atual.atleta1.faixa|default:'' }}">{{ luta_atual.atleta1.get_faixa_display|default:"" }}</span>
+      </div>
+    </div>
+    <div style="font-size: 2.5rem; font-weight: 900; opacity: 0.5;">VS</div>
+    <div>
+      <div style="font-size: 1.5rem; font-weight: 800;">{{ luta_atual.atleta2.nome|default:"BYE" }}</div>
+      <div style="opacity:0.7; font-size:0.9rem;">{{ luta_atual.atleta2.academia|default:"" }}</div>
+      <div style="margin-top:0.5rem;">
+        <span class="badge-faixa faixa-{{ luta_atual.atleta2.faixa|default:'' }}">{{ luta_atual.atleta2.get_faixa_display|default:"" }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TOGGLE MODO DE PONTUAÇÃO ──────────────────────────────────────── -->
+  <div style="display:flex;gap:0;margin-top:1.5rem;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.2);">
+    <button id="btn-modo-rapido" onclick="setModo('rapido')" style="flex:1;padding:0.6rem 1rem;background:rgba(255,255,255,0.18);border:none;color:#fff;font-weight:700;font-size:0.85rem;cursor:pointer;transition:background 0.15s;">⚡ Pontuação Rápida</button>
+    <button id="btn-modo-posicao" onclick="setModo('posicao')" style="flex:1;padding:0.6rem 1rem;background:rgba(255,255,255,0.05);border:none;color:#aaa;font-weight:700;font-size:0.85rem;cursor:pointer;transition:background 0.15s;">🥋 Por Posição</button>
+  </div>
+
+  <div id="painel-rapido">
+  <div style="margin-top:1.2rem;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:1rem;">
+    <div style="text-align:center;font-size:0.8rem;opacity:0.75;letter-spacing:1px;text-transform:uppercase;margin-bottom:0.9rem;">
+      ⚡ Pontuação ao Vivo
+    </div>
+
+    <!-- Placar compacto -->
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:0.7rem;align-items:center;text-align:center;margin-bottom:1rem;">
+      <div style="font-size:2.8rem;font-weight:900;color:#5dade2;" id="arb-pts-a1">{{ luta_atual.pontos_atleta1 }}</div>
+      <div style="font-size:1.1rem;opacity:0.4;font-weight:700;">PTS</div>
+      <div style="font-size:2.8rem;font-weight:900;color:#e74c3c;" id="arb-pts-a2">{{ luta_atual.pontos_atleta2 }}</div>
+    </div>
+
+    <!-- Botões de pontuação — Atleta 1 -->
+    <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:0.9rem;margin-bottom:0.7rem;">
+      <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.6rem;color:#5dade2;">
+        {{ luta_atual.atleta1.nome|default:"Atleta 1" }}
+      </div>
+
+      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+        <span style="font-size:0.75rem;opacity:0.6;align-self:center;">Pontos:</span>
+        <button class="btn-pont" data-campo="pontos_atleta1" data-delta="2">+2</button>
+        <button class="btn-pont" data-campo="pontos_atleta1" data-delta="3">+3</button>
+        <button class="btn-pont" data-campo="pontos_atleta1" data-delta="4">+4</button>
+        <button class="btn-pont btn-neg" data-campo="pontos_atleta1" data-delta="-1">−</button>
+      </div>
+      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+        <span style="font-size:0.75rem;opacity:0.6;align-self:center;">Vantagem:</span>
+        <button class="btn-pont btn-van" data-campo="vantagens_atleta1" data-delta="1">+1</button>
+        <button class="btn-pont btn-neg" data-campo="vantagens_atleta1" data-delta="-1">−</button>
+        <span style="font-size:0.75rem;opacity:0.6;align-self:center;margin-left:0.6rem;">Penaliz.:</span>
+        <button class="btn-pont btn-pen" data-campo="penalizacoes_atleta1" data-delta="1">+1</button>
+        <button class="btn-pont btn-neg" data-campo="penalizacoes_atleta1" data-delta="-1">−</button>
+      </div>
+      <div style="font-size:0.8rem;opacity:0.65;">
+        Van: <span id="arb-van-a1">{{ luta_atual.vantagens_atleta1 }}</span> &nbsp;|&nbsp;
+        Pen: <span id="arb-pen-a1">{{ luta_atual.penalizacoes_atleta1 }}</span>
+      </div>
+    </div>
+
+    <!-- Botões de pontuação — Atleta 2 -->
+    <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:0.9rem;">
+      <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.6rem;color:#e74c3c;">
+        {{ luta_atual.atleta2.nome|default:"Atleta 2" }}
+      </div>
+
+      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+        <span style="font-size:0.75rem;opacity:0.6;align-self:center;">Pontos:</span>
+        <button class="btn-pont" data-campo="pontos_atleta2" data-delta="2">+2</button>
+        <button class="btn-pont" data-campo="pontos_atleta2" data-delta="3">+3</button>
+        <button class="btn-pont" data-campo="pontos_atleta2" data-delta="4">+4</button>
+        <button class="btn-pont btn-neg" data-campo="pontos_atleta2" data-delta="-1">−</button>
+      </div>
+      <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.5rem;">
+        <span style="font-size:0.75rem;opacity:0.6;align-self:center;">Vantagem:</span>
+        <button class="btn-pont btn-van" data-campo="vantagens_atleta2" data-delta="1">+1</button>
+        <button class="btn-pont btn-neg" data-campo="vantagens_atleta2" data-delta="-1">−</button>
+        <span style="font-size:0.75rem;opacity:0.6;align-self:center;margin-left:0.6rem;">Penaliz.:</span>
+        <button class="btn-pont btn-pen" data-campo="penalizacoes_atleta2" data-delta="1">+1</button>
+        <button class="btn-pont btn-neg" data-campo="penalizacoes_atleta2" data-delta="-1">−</button>
+      </div>
+      <div style="font-size:0.8rem;opacity:0.65;">
+        Van: <span id="arb-van-a2">{{ luta_atual.vantagens_atleta2 }}</span> &nbsp;|&nbsp;
+        Pen: <span id="arb-pen-a2">{{ luta_atual.penalizacoes_atleta2 }}</span>
+      </div>
+    </div>
+
+    <!-- Feedback de envio -->
+    <div id="pont-feedback" style="text-align:center;font-size:0.8rem;margin-top:0.6rem;min-height:1.2rem;opacity:0.7;"></div>
+  </div>
+
+  </div><!-- /painel-rapido -->
+
+  <div id="painel-posicao" style="display:none;">
+  <div style="margin-top:1.2rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:1rem;">
+    <div style="text-align:center;font-size:0.8rem;opacity:0.75;letter-spacing:1px;text-transform:uppercase;margin-bottom:1rem;">
+      🥋 Registrar Posição / Finalização
+    </div>
+
+    <!-- Seleção de atleta -->
+    <div style="display:flex;gap:0.5rem;margin-bottom:1rem;justify-content:center;">
+      <button id="sel-a1" class="btn-sel-atleta ativo" data-atleta="1" style="flex:1;max-width:200px;">
+        {{ luta_atual.atleta1.nome|default:"Atleta 1" }}
+      </button>
+      <button id="sel-a2" class="btn-sel-atleta" data-atleta="2" style="flex:1;max-width:200px;">
+        {{ luta_atual.atleta2.nome|default:"Atleta 2" }}
+      </button>
+    </div>
+
+    <!-- Abas de categoria -->
+    <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-bottom:0.8rem;" id="abas-cat">
+      <button class="btn-aba ativo" data-cat="pontos">🏅 Pontos</button>
+      <button class="btn-aba" data-cat="vantagem">⭐ Vantagem</button>
+      <button class="btn-aba" data-cat="penalizacao">⚠ Penalização</button>
+      <button class="btn-aba" data-cat="finalizacao">🔴 Finalização</button>
+    </div>
+
+    <!-- Listas de ações por categoria -->
+    {% for cat_key, acoes in grupos_acoes.items %}
+    <div class="lista-acoes" id="acoes-{{ cat_key }}" style="{% if cat_key != 'pontos' %}display:none;{% endif %}">
+      <div style="display:flex;flex-wrap:wrap;gap:0.4rem;">
+        {% for acao in acoes %}
+        <button class="btn-acao"
+                data-tipo="{{ acao.pk }}"
+                data-cat="{{ acao.categoria }}"
+                data-pts="{{ acao.pontos }}"
+                data-nome="{{ acao.nome }}"
+                title="{{ acao.descricao }}">
+          {{ acao.nome }}{% if acao.pontos %} <span style="opacity:0.7;font-size:0.78rem;">(+{{ acao.pontos }}pts)</span>{% endif %}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+
+    <!-- Feedback ação -->
+    <div id="acao-feedback" style="text-align:center;font-size:0.8rem;margin-top:0.8rem;min-height:1.2rem;font-weight:600;"></div>
+  </div>
+  </div><!-- /painel-posicao -->
+
+  <!-- ── HISTÓRICO DE AÇÕES (com desfazer) ─────────────────────────────── -->
+  {% if ultimas_acoes %}
+  <div style="margin-top:1rem;background:rgba(0,0,0,0.18);border-radius:10px;padding:0.85rem;">
+    <div style="font-size:0.75rem;letter-spacing:1px;text-transform:uppercase;opacity:0.55;margin-bottom:0.6rem;">
+      📋 Últimas ações registradas
+    </div>
+    <div id="lista-historico">
+      {% for acao in ultimas_acoes %}
+      <div class="linha-historico" id="hist-{{ acao.pk }}" style="display:flex;align-items:center;justify-content:space-between;padding:0.3rem 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+        <span style="font-size:0.82rem;">
+          <strong>{{ acao.atleta.nome|default:"?" }}</strong> —
+          {{ acao.tipo_acao.nome }}
+          {% if acao.tipo_acao.pontos %}<span style="color:#5dade2;">(+{{ acao.tipo_acao.pontos }}pts)</span>{% endif %}
+        </span>
+        <button class="btn-desfazer" data-acao="{{ acao.pk }}" title="Desfazer esta ação" style="background:none;border:1px solid rgba(255,100,100,0.4);color:#e74c3c;font-size:0.75rem;padding:0.2rem 0.5rem;border-radius:5px;cursor:pointer;">↩ Desfazer</button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <style>
+    .btn-pont {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-pont:hover { background: rgba(255,255,255,0.28); }
+    .btn-pont:active { transform: scale(0.93); }
+    .btn-pont.btn-van { border-color: #f1c40f; color: #f1c40f; }
+    .btn-pont.btn-pen { border-color: #e67e22; color: #e67e22; }
+    .btn-pont.btn-neg { border-color: rgba(255,255,255,0.15); opacity: 0.55; }
+    .btn-pont.btn-neg:hover { opacity: 1; }
+
+    /* Botões de seleção de atleta */
+    .btn-sel-atleta {
+      background: rgba(255,255,255,0.08);
+      border: 2px solid rgba(255,255,255,0.15);
+      color: #ccc;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+    #sel-a1.ativo { border-color: #5dade2; color: #5dade2; background: rgba(93,173,226,0.12); }
+    #sel-a2.ativo { border-color: #e74c3c; color: #e74c3c; background: rgba(231,76,60,0.12); }
+
+    /* Abas de categoria */
+    .btn-aba {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #aaa;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.35rem 0.8rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-aba.ativo { background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.4); }
+
+    /* Botões de ação */
+    .btn-acao {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #ddd;
+      font-size: 0.78rem;
+      padding: 0.4rem 0.7rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: left;
+    }
+    .btn-acao:hover { background: rgba(255,255,255,0.18); color: #fff; }
+    .btn-acao:active { transform: scale(0.96); }
+    .btn-acao[data-cat="pontos"]:hover { border-color: #5dade2; }
+    .btn-acao[data-cat="vantagem"]:hover { border-color: #f1c40f; }
+    .btn-acao[data-cat="penalizacao"]:hover { border-color: #e67e22; }
+    .btn-acao[data-cat="finalizacao"] { border-color: rgba(231,76,60,0.4); color: #e74c3c; }
+    .btn-acao[data-cat="finalizacao"]:hover { background: rgba(231,76,60,0.18); border-color: #e74c3c; }
+  </style>
+
+  <script>
+    function setModo(modo) {
+      const PREF_KEY = 'modo_pont_{{ tatame.pk }}';
+      const rapido = document.getElementById('painel-rapido');
+      const posicao = document.getElementById('painel-posicao');
+      const btnR = document.getElementById('btn-modo-rapido');
+      const btnP = document.getElementById('btn-modo-posicao');
+      if (modo === 'rapido') {
+        rapido.style.display = 'block';
+        posicao.style.display = 'none';
+        btnR.style.background = 'rgba(255,255,255,0.18)'; btnR.style.color = '#fff';
+        btnP.style.background = 'rgba(255,255,255,0.05)'; btnP.style.color = '#aaa';
+      } else {
+        rapido.style.display = 'none';
+        posicao.style.display = 'block';
+        btnR.style.background = 'rgba(255,255,255,0.05)'; btnR.style.color = '#aaa';
+        btnP.style.background = 'rgba(255,255,255,0.18)'; btnP.style.color = '#fff';
+      }
+      localStorage.setItem(PREF_KEY, modo);
+    }
+    // Restaurar último modo escolhido
+    (function() {
+      const pref = localStorage.getItem('modo_pont_{{ tatame.pk }}');
+      if (pref) setModo(pref);
+    })();
+
+    (function() {
+      const LUTA_PK = {{ luta_atual.pk }};
+      const CSRF = '{{ csrf_token }}';
+      const URL_PONT = "{% url 'arbitro_pontuar' luta_atual.pk %}";
+      const URL_ACAO = "{% url 'arbitro_registrar_acao' luta_atual.pk %}";
+      const URL_DESFAZER_BASE = "{% url 'arbitro_desfazer_acao' 0 %}".replace('/0/', '/');
+
+      // ── Placar numérico ──
+      const mapa = {
+        'pontos_atleta1':      'arb-pts-a1',
+        'pontos_atleta2':      'arb-pts-a2',
+        'vantagens_atleta1':   'arb-van-a1',
+        'vantagens_atleta2':   'arb-van-a2',
+        'penalizacoes_atleta1':'arb-pen-a1',
+        'penalizacoes_atleta2':'arb-pen-a2',
+      };
+
+      function atualizarPlacar(data) {
+        Object.entries(mapa).forEach(([k, id]) => {
+          const el = document.getElementById(id);
+          if (el && data[k] !== undefined) el.textContent = data[k];
+        });
+      }
+
+      // ── Botões +2/+3/+4 ──
+      document.querySelectorAll('.btn-pont').forEach(btn => {
+        btn.addEventListener('click', async function() {
+          const campo = this.dataset.campo;
+          const delta = parseInt(this.dataset.delta);
+          const fb = document.getElementById('pont-feedback');
+          btn.disabled = true;
+          try {
+            const resp = await fetch(URL_PONT, {
+              method: 'POST',
+              headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: `campo=${campo}&delta=${delta}`,
+            });
+            const data = await resp.json();
+            if (data.ok) {
+              atualizarPlacar(data);
+              fb.style.color = '#2ecc71'; fb.textContent = '✔ Salvo';
+            } else {
+              fb.style.color = '#e74c3c'; fb.textContent = data.erro || 'Erro';
+            }
+          } catch(e) {
+            fb.style.color = '#e74c3c'; fb.textContent = 'Erro de conexão';
+          } finally {
+            btn.disabled = false;
+            setTimeout(() => { fb.textContent = ''; }, 2500);
+          }
+        });
+      });
+
+      // ── Seleção de atleta ──
+      let atletaSelecionado = '1';
+      document.querySelectorAll('.btn-sel-atleta').forEach(btn => {
+        btn.addEventListener('click', function() {
+          atletaSelecionado = this.dataset.atleta;
+          document.querySelectorAll('.btn-sel-atleta').forEach(b => b.classList.remove('ativo'));
+          this.classList.add('ativo');
+        });
+      });
+
+      // ── Abas de categoria ──
+      document.querySelectorAll('.btn-aba').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.btn-aba').forEach(b => b.classList.remove('ativo'));
+          this.classList.add('ativo');
+          document.querySelectorAll('.lista-acoes').forEach(el => el.style.display = 'none');
+          const lista = document.getElementById('acoes-' + this.dataset.cat);
+          if (lista) lista.style.display = 'block';
+        });
+      });
+
+      // ── Botões de ação por posição ──
+      document.querySelectorAll('.btn-acao').forEach(btn => {
+        btn.addEventListener('click', async function() {
+          const tipoAcao = this.dataset.tipo;
+          const cat = this.dataset.cat;
+          const nome = this.dataset.nome;
+          const fb = document.getElementById('acao-feedback');
+
+          // Confirmação para finalizações
+          if (cat === 'finalizacao') {
+            const a = atletaSelecionado === '1'
+              ? document.getElementById('sel-a1').textContent.trim()
+              : document.getElementById('sel-a2').textContent.trim();
+            if (!confirm(`Confirmar finalização?\n${nome}\nAtleta: ${a}`)) return;
+          }
+
+          btn.disabled = true;
+          try {
+            const resp = await fetch(URL_ACAO, {
+              method: 'POST',
+              headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: `tipo_acao=${tipoAcao}&atleta=${atletaSelecionado}`,
+            });
+            const data = await resp.json();
+            if (data.ok) {
+              atualizarPlacar(data);
+              fb.style.color = '#2ecc71';
+              if (data.encerrou) {
+                fb.textContent = `🔴 LUTA ENCERRADA — ${nome}`;
+                setTimeout(() => location.reload(), 2000);
+              } else {
+                fb.textContent = `✔ ${nome} registrado!`;
+                setTimeout(() => { fb.textContent = ''; }, 3000);
+                // Atualiza histórico
+                setTimeout(() => location.reload(), 3500);
+              }
+            } else {
+              fb.style.color = '#e74c3c';
+              fb.textContent = data.erro || 'Erro ao registrar';
+            }
+          } catch(e) {
+            fb.style.color = '#e74c3c';
+            fb.textContent = 'Erro de conexão';
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      });
+
+      // ── Desfazer ação ──
+      document.querySelectorAll('.btn-desfazer').forEach(btn => {
+        btn.addEventListener('click', async function() {
+          const acaoPk = this.dataset.acao;
+          if (!confirm('Desfazer esta ação e reverter o placar?')) return;
+          btn.disabled = true;
+          try {
+            const resp = await fetch(URL_DESFAZER_BASE + acaoPk + '/desfazer/', {
+              method: 'POST',
+              headers: { 'X-CSRFToken': CSRF },
+            });
+            const data = await resp.json();
+            if (data.ok) {
+              atualizarPlacar(data);
+              document.getElementById('hist-' + acaoPk)?.remove();
+            } else {
+              alert(data.erro || 'Erro ao desfazer');
+            }
+          } catch(e) {
+            alert('Erro de conexão');
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      });
+
+    })();
+  </script>
+
+  <div style="text-align:center; margin-top:1.5rem;">
+    <div style="opacity:0.7; font-size:0.85rem; margin-bottom:0.5rem;">
+      Categoria: {{ luta_atual.chave.categoria }} | Rodada {{ luta_atual.rodada }}
+    </div>
+    {% if luta_atual.iniciada_por %}
+    <div style="opacity:0.8;font-size:0.85rem;margin-bottom:0.6rem;">Iniciada por {{ luta_atual.iniciada_por.nome }}</div>
+    {% endif %}
+    <a href="{% url 'luta_resultado' luta_atual.pk %}" class="btn btn-primary" style="font-size:1rem; padding:0.65rem 2rem;">
+      🏆 Registrar Resultado
+    </a>
+    <a href="{% url 'relatorio_luta' luta_atual.pk %}" class="btn btn-outline" style="font-size:0.9rem;" target="_blank">
+      📊 Relatório
+    </a>
+  </div>
+</div>
+{% else %}
+<div style="background:#f9f9f9; border:2px dashed #ddd; border-radius:12px; padding:2rem; text-align:center; color:var(--cinza); margin-bottom:2rem;">
+  <div style="font-size:2rem; margin-bottom:0.5rem;">⏸</div>
+  <div>Nenhuma luta em andamento neste tatame.</div>
+</div>
+{% endif %}
+
+<!-- PRÓXIMAS LUTAS -->
+<div class="card" style="margin-bottom:2rem;">
+  <div class="card-header">📋 Próximas Lutas</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Rodada</th>
+        <th>Atleta 1</th>
+        <th>Atleta 2</th>
+        <th>Categoria</th>
+        <th>Placar</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for luta in proximas %}
+      <tr>
+        <td><strong>{{ luta.rodada }}</strong></td>
+        <td>
+          <strong>{{ luta.atleta1.nome|default:"BYE" }}</strong>
+          {% if luta.atleta1 %}<div style="font-size:0.8rem;color:var(--cinza);">{{ luta.atleta1.academia }}</div>{% endif %}
+        </td>
+        <td>
+          <strong>{{ luta.atleta2.nome|default:"BYE" }}</strong>
+          {% if luta.atleta2 %}<div style="font-size:0.8rem;color:var(--cinza);">{{ luta.atleta2.academia }}</div>{% endif %}
+        </td>
+        <td style="font-size:0.85rem;">{{ luta.chave.categoria.nome }}</td>
+        <td style="font-size:0.8rem;">
+          {{ luta.pontos_atleta1 }}-{{ luta.pontos_atleta2 }} pts
+          <br>
+          {{ luta.vantagens_atleta1 }}-{{ luta.vantagens_atleta2 }} van
+          <br>
+          {{ luta.penalizacoes_atleta1 }}-{{ luta.penalizacoes_atleta2 }} pen
+        </td>
+        <td>
+          <div class="actions">
+            {% if not luta_atual %}
+            <form method="post" action="{% url 'arbitro_iniciar_luta' luta.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-success">▶ Iniciar</button>
+            </form>
+            {% endif %}
+            <a href="{% url 'luta_resultado' luta.pk %}" class="btn btn-sm btn-primary">📝 Resultado</a>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" style="text-align:center;color:var(--cinza);padding:1.5rem;">
+          Nenhuma luta pendente neste tatame.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- LUTAS FINALIZADAS -->
+{% if finalizadas %}
+<div class="card">
+  <div class="card-header" style="background:#555;">✔ Lutas Finalizadas</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Rodada</th>
+        <th>Atleta 1</th>
+        <th>Atleta 2</th>
+        <th>Placar</th>
+        <th>Vencedor</th>
+        <th>Resultado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for luta in finalizadas %}
+      <tr>
+        <td>{{ luta.rodada }}</td>
+        <td style="{% if luta.vencedor == luta.atleta1 %}font-weight:700;color:#27ae60;{% endif %}">
+          {{ luta.atleta1.nome|default:"BYE" }}
+        </td>
+        <td style="{% if luta.vencedor == luta.atleta2 %}font-weight:700;color:#27ae60;{% endif %}">
+          {{ luta.atleta2.nome|default:"BYE" }}
+        </td>
+        <td style="font-size:0.8rem;line-height:1.35;">
+          <strong>{{ luta.pontos_atleta1 }}-{{ luta.pontos_atleta2 }}</strong> pts
+          <br>
+          {{ luta.vantagens_atleta1 }}-{{ luta.vantagens_atleta2 }} van
+          <br>
+          {{ luta.penalizacoes_atleta1 }}-{{ luta.penalizacoes_atleta2 }} pen
+        </td>
+        <td><strong style="color:#27ae60;">{{ luta.vencedor.nome|default:"—" }}</strong></td>
+        <td>
+          <span style="font-size:0.85rem;background:var(--cinza-claro);padding:3px 8px;border-radius:4px;">
+            {{ luta.get_resultado_display }}
+          </span>
+          {% if luta.finalizada_por %}
+          <div style="font-size:0.78rem;color:var(--cinza);margin-top:0.35rem;">Por {{ luta.finalizada_por.nome }}</div>
+          {% endif %}
+          <div style="margin-top:0.4rem;">
+            <a href="{% url 'relatorio_luta' luta.pk %}" class="btn btn-sm btn-outline" target="_blank" style="font-size:0.75rem;padding:0.2rem 0.6rem;">📊 Relatório</a>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% endblock %}

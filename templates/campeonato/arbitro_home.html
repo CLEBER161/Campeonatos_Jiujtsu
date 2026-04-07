@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Área do {{ area_titulo|default:'Árbitro' }} | Campeonato Jiu-Jitsu{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>⚖ Área do <span>{{ area_titulo|default:'Árbitro' }}</span></h1>
+  <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+    <a href="{% url 'home' %}" class="btn btn-outline">← Início</a>
+    {% if arbitro %}<a href="{% url rota_logout|default:'arbitro_logout' %}" class="btn btn-outline">Sair</a>{% endif %}
+  </div>
+</div>
+
+<div style="margin-bottom: 1rem; color: var(--cinza); font-size: 0.95rem;">
+  {% if arbitro %}
+    Logado como <strong>{{ arbitro.nome }}</strong>. {{ area_subtitulo|default:'Estes são os tatames vinculados ao seu usuário no campeonato atual.' }}
+  {% else %}
+    Visualização administrativa dos tatames do campeonato atual.
+  {% endif %}
+</div>
+
+{% if vinculos %}
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header">Vínculos de Tatame</div>
+  <div class="card-body" style="display:grid;gap:0.75rem;">
+    {% for vinculo in vinculos %}
+      <div style="display:flex;justify-content:space-between;gap:1rem;align-items:center;flex-wrap:wrap;padding:0.75rem 0;border-bottom:1px solid #eee;">
+        <div>
+          <strong>{{ vinculo.tatame }}</strong>
+          {% if vinculo.arbitro %}
+          <div style="color:var(--cinza);font-size:0.9rem;">Responsável da mesa: {{ vinculo.arbitro.nome }}</div>
+          {% endif %}
+        </div>
+        {% if pode_operar %}
+        <a href="{% url rota_tatame|default:'arbitro_tatame' vinculo.tatame.pk %}" class="btn btn-primary">Abrir Mesa</a>
+        {% else %}
+        <span class="btn btn-outline" style="pointer-events:none;">Somente leitura</span>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem;">
+  {% for tatame in tatames %}
+  <a href="{% if pode_operar %}{% url rota_tatame|default:'arbitro_tatame' tatame.pk %}{% else %}{% url 'placar_tatame' tatame.pk %}{% endif %}" style="text-decoration:none;">
+    <div style="
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      padding: 2rem;
+      text-align: center;
+      border: 3px solid transparent;
+      transition: all 0.2s;
+    " onmouseover="this.style.borderColor='var(--vermelho)';this.style.transform='translateY(-3px)'"
+       onmouseout="this.style.borderColor='transparent';this.style.transform='translateY(0)'">
+      <div style="font-size: 3rem; margin-bottom: 0.5rem;">🥊</div>
+      <div style="font-size: 1.5rem; font-weight: 800; color: var(--preto);">Tatame {{ tatame.numero }}</div>
+      <div style="color: var(--cinza); font-size: 0.9rem; margin-top: 4px;">{{ tatame.nome }}</div>
+      <div style="margin-top:0.45rem;font-size:0.82rem;color:var(--cinza);">{% if pode_operar %}Abrir mesa{% else %}Abrir telão{% endif %}</div>
+      {% if tatame.total_lutas %}
+        <div style="margin-top:0.75rem;">
+          <span style="background: var(--cinza-claro); padding: 3px 10px; border-radius: 20px; font-size: 0.8rem;">
+            {{ tatame.total_lutas }} luta{{ tatame.total_lutas|pluralize:"s" }}
+          </span>
+        </div>
+      {% endif %}
+    </div>
+  </a>
+  {% empty %}
+  <div style="grid-column:1/-1; text-align:center; color: var(--cinza); padding: 3rem;">
+    <p style="font-size: 1.1rem;">Nenhum tatame cadastrado ainda.</p>
+    <p style="font-size: 0.9rem; margin-top: 0.5rem;">Acesse o <a href="/admin/" style="color:var(--vermelho);">painel admin</a> para criar tatames.</p>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card" style="margin-top:1.5rem;">
+  <div class="card-header">Histórico de Atuação</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Tatame</th>
+        <th>Luta</th>
+        <th>Categoria</th>
+        <th>Status</th>
+        <th>Registrado por</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for luta in historico_lutas %}
+      <tr>
+        <td>{{ luta.tatame|default:'—' }}</td>
+        <td>{{ luta.atleta1.nome|default:'BYE' }} x {{ luta.atleta2.nome|default:'BYE' }}</td>
+        <td>{{ luta.chave.categoria.nome }}</td>
+        <td>{{ luta.get_status_display }}</td>
+        <td>{{ luta.finalizada_por.nome|default:luta.arbitro.nome|default:'—' }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" style="text-align:center;color:var(--cinza);padding:1.5rem;">Nenhuma luta registrada para este perfil ainda.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

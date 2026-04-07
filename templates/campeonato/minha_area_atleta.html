@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}Minha Área - {{ atleta.nome }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>👤 Minha Área do Atleta</h1>
+  <a href="{% url 'atleta_logout' %}" class="btn btn-outline">Sair</a>
+</div>
+
+<div class="card" style="margin-bottom:1.2rem;">
+  <div class="card-header">Meus Campeonatos</div>
+  <div class="card-body" style="display:grid;gap:0.75rem;">
+    {% for item in minhas_inscricoes %}
+      <div style="display:flex;justify-content:space-between;gap:1rem;align-items:center;flex-wrap:wrap;padding:0.75rem 0;border-bottom:1px solid #eee;">
+        <div>
+          <strong>{{ item.campeonato.nome }}</strong>
+          <div style="color:var(--cinza);font-size:0.9rem;">{{ item.categoria|default:'Categoria ainda não definida' }}</div>
+          <div style="font-size:0.85rem;color:{% if item.documentacao_ok %}#1e8449{% else %}#b9770e{% endif %};margin-top:0.2rem;">
+            {% if item.documentacao_ok %}QR liberado{% else %}{{ item.pendencia_documental }}{% endif %}
+          </div>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <a href="{% url 'minha_area_atleta' %}?campeonato={{ item.campeonato.pk }}" class="btn btn-sm {% if inscricao and inscricao.pk == item.pk %}btn-primary{% else %}btn-outline{% endif %}">Abrir</a>
+          <a href="{% url 'atleta_inscrever_campeonato' item.campeonato.pk %}" class="btn btn-sm btn-dark">Pagamento / Bolsa</a>
+        </div>
+      </div>
+    {% empty %}
+      <div style="color:var(--cinza);">Você ainda não está inscrito em nenhum campeonato.</div>
+    {% endfor %}
+
+    {% for campeonato in campeonatos_abertos %}
+      <div style="display:flex;justify-content:space-between;gap:1rem;align-items:center;flex-wrap:wrap;padding:0.75rem 0;border-bottom:1px solid #eee;">
+        <div>
+          <strong>{{ campeonato.nome }}</strong>
+          <div style="color:var(--cinza);font-size:0.9rem;">Inscrições abertas{% if campeonato.data_evento %} · {{ campeonato.data_evento|date:"d/m/Y" }}{% endif %}</div>
+        </div>
+        <a href="{% url 'atleta_inscrever_campeonato' campeonato.pk %}" class="btn btn-success">Inscrever-me</a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="atleta-perfil" style="margin-bottom:1.5rem;">
+  {% if atleta.foto %}
+  <img src="{{ atleta.foto.url }}" alt="{{ atleta.nome }}" class="atleta-foto">
+  {% else %}
+  <div class="atleta-foto-placeholder">🥋</div>
+  {% endif %}
+
+  <div class="atleta-info">
+    <h2>{{ atleta.nome }}</h2>
+    <span class="badge-faixa faixa-{{ atleta.faixa }}">{{ atleta.get_faixa_display }}</span>
+    <div class="info-grid" style="margin-top:1rem;">
+      <div class="info-item"><label>Academia</label><span>{{ atleta.academia }}</span></div>
+      <div class="info-item"><label>Campeonato</label><span>{{ campeonato_atual|default:'Nenhum selecionado' }}</span></div>
+      <div class="info-item"><label>Categoria</label><span>{{ inscricao.categoria|default:'Não definida' }}</span></div>
+      <div class="info-item"><label>Peso</label><span>{{ atleta.peso }} kg</span></div>
+      <div class="info-item"><label>Idade</label><span>{{ atleta.idade }} anos</span></div>
+      {% if inscricao %}
+      <div class="info-item"><label>Modalidade da Inscrição</label><span>{{ inscricao.get_modalidade_inscricao_display }}</span></div>
+      <div class="info-item"><label>Status do QR</label><span>{% if inscricao.documentacao_ok %}Liberado{% else %}Pendente{% endif %}</span></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <span class="stat-num">{% if minha_geral %}{{ minha_geral.posicao }}{% else %}-{% endif %}</span>
+    <span class="stat-label">Ranking Geral</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-num">{% if minha_categoria %}{{ minha_categoria.posicao }}{% else %}-{% endif %}</span>
+    <span class="stat-label">Ranking da Categoria</span>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:1.2rem;">
+  <div class="card-header">Acesso Rápido</div>
+  <div class="card-body" style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+    <a href="{% url 'atleta_tatames_tempo_real' %}{% if campeonato_atual %}?campeonato={{ campeonato_atual.pk }}{% endif %}" class="btn btn-primary">📺 Tatames em Tempo Real</a>
+    <a href="{% url 'atleta_chaveamento' atleta.pk %}" class="btn btn-dark">🏆 Ver Meu Chaveamento</a>
+    <a href="{% url 'atleta_ranking' atleta.pk %}" class="btn btn-outline">📈 Ver Meu Ranking</a>
+    <a href="{% url 'atleta_credencial' atleta.pk %}" class="btn btn-success">🎫 Minha Credencial</a>
+    {% if inscricao %}<a href="{% url 'atleta_inscrever_campeonato' inscricao.campeonato.pk %}" class="btn btn-dark">💳 Pagamento / Bolsa</a>{% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Minhas Últimas Lutas</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Rodada</th>
+        <th>Adversário</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for luta in lutas %}
+      <tr>
+        <td>{{ luta.rodada }}</td>
+        <td>
+          {% if luta.atleta1 == atleta %}
+            {{ luta.atleta2.nome|default:'BYE' }}
+          {% else %}
+            {{ luta.atleta1.nome|default:'BYE' }}
+          {% endif %}
+        </td>
+        <td>
+          {% if luta.resultado == 'pendente' %}
+          <span style="color:var(--cinza);">Aguardando</span>
+          {% elif luta.vencedor == atleta %}
+          <span style="color:#27ae60;font-weight:700;">Vitória</span>
+          {% else %}
+          <span style="color:#c0392b;font-weight:700;">Derrota</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3" style="text-align:center;color:var(--cinza);">Nenhuma luta registrada.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

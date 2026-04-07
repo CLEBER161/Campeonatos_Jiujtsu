@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Espaco dos Atletas | Campeonato Jiu-Jitsu{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🥋 Espaco dos <span>Atletas</span></h1>
+  <a href="{% url 'home' %}" class="btn btn-outline">← Início</a>
+</div>
+
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+    <div>
+      <h2 style="margin-bottom:0.3rem;">Area dedicada aos atletas</h2>
+      <p style="color:var(--cinza);">Aqui o atleta cria conta, escolhe campeonatos disponíveis, acompanha inscrições e imprime credencial com QR Code.</p>
+    </div>
+    <div class="stat-card" style="min-width:180px;margin:0;">
+      <span class="stat-num">{{ total_atletas }}</span>
+      <span class="stat-label">Inscrições no evento</span>
+    </div>
+  </div>
+</div>
+
+{% if campeonato_atual %}
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header">Campeonato Atual</div>
+  <div class="card-body">
+    <strong>{{ campeonato_atual.nome }}</strong>
+    <div style="margin-top:0.35rem;color:var(--cinza);">
+      {% if campeonato_atual.local %}{{ campeonato_atual.local }}{% else %}Local a definir{% endif %}
+      {% if campeonato_atual.data_evento %} · {{ campeonato_atual.data_evento|date:"d/m/Y" }}{% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+  <div class="card">
+    <div class="card-header">Conta e Inscrições</div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:0.75rem;">
+      <a href="{% url 'atleta_cadastro' %}" class="btn btn-primary">+ Criar Minha Conta</a>
+      <a href="{% url 'atleta_login' %}" class="btn btn-success">Entrar na Minha Área</a>
+      <a href="{% url 'atleta_lista' %}" class="btn btn-dark">Ver Inscritos do Campeonato Atual</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">Campeonatos Disponíveis</div>
+    <div class="card-body">
+      {% for campeonato in campeonatos_disponiveis %}
+        <div style="padding:0.8rem 0;border-bottom:1px solid #eee;">
+          <strong>{{ campeonato.nome }}</strong>
+          <div style="color:var(--cinza);font-size:0.92rem;">{% if campeonato.local %}{{ campeonato.local }}{% endif %}{% if campeonato.data_evento %} · {{ campeonato.data_evento|date:"d/m/Y" }}{% endif %}</div>
+        </div>
+      {% empty %}
+        <div style="color:var(--cinza);">Nenhum campeonato com inscrição aberta no momento.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:1.5rem;">
+  <div class="card-header">Chaveamento e Ranking do Atleta</div>
+  <div class="card-body">
+    <p style="color:var(--cinza);margin-bottom:0.8rem;">
+      Depois de se inscrever em um campeonato, o atleta acompanha credencial, chaveamento, ranking e histórico diretamente na própria área.
+    </p>
+    <div style="display:flex;gap:0.7rem;flex-wrap:wrap;">
+      <a href="{% url 'atleta_login' %}" class="btn btn-success">Entrar na Minha Área</a>
+      <a href="{% url 'atleta_cadastro' %}" class="btn btn-outline">Criar Conta Agora</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

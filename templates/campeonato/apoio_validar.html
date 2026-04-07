@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Validar Check-in — {{ atleta.nome }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>✅ Validar Check-in</h1>
+  <a href="{% url 'apoio_home' %}" class="btn btn-outline">← Portal Apoio</a>
+</div>
+
+<!-- Card do atleta -->
+<div style="
+  background: {% if ja_fez_checkin %}#d5f5e3{% else %}#fff{% endif %};
+  border: 3px solid {% if ja_fez_checkin %}#27ae60{% else %}var(--vermelho){% endif %};
+  border-radius: 16px;
+  max-width: 600px;
+  margin: 0 auto 2rem;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+">
+  <div style="background: {% if ja_fez_checkin %}#27ae60{% else %}var(--vermelho){% endif %}; padding: 1.25rem 2rem; color: #fff;">
+    <div style="font-size: 1.4rem; font-weight: 800;">{{ atleta.nome }}</div>
+    <div style="opacity: 0.85; margin-top: 2px;">{{ atleta.academia }}</div>
+  </div>
+
+  <div style="padding: 1.5rem 2rem; display: flex; gap: 2rem; align-items: center;">
+    {% if inscricao.qr_code %}
+      <img src="{{ inscricao.qr_code.url }}" style="width:100px;height:100px;border-radius:8px;border:2px solid #ddd;flex-shrink:0;">
+    {% endif %}
+    <div style="flex:1;">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+        <div>
+          <div style="font-size:0.75rem;color:#888;text-transform:uppercase;">Faixa</div>
+          <span class="badge-faixa faixa-{{ atleta.faixa }}">{{ atleta.get_faixa_display }}</span>
+        </div>
+        <div>
+          <div style="font-size:0.75rem;color:#888;text-transform:uppercase;">Sexo</div>
+          <strong>{{ atleta.get_sexo_display }}</strong>
+        </div>
+        <div>
+          <div style="font-size:0.75rem;color:#888;text-transform:uppercase;">Modalidade</div>
+          <strong>{{ inscricao.get_modalidade_inscricao_display }}</strong>
+        </div>
+        <div>
+          <div style="font-size:0.75rem;color:#888;text-transform:uppercase;">Peso</div>
+          <strong>{{ atleta.peso }} kg</strong>
+        </div>
+        <div>
+          <div style="font-size:0.75rem;color:#888;text-transform:uppercase;">Idade</div>
+          <strong>{{ atleta.idade }} anos</strong>
+        </div>
+        {% if inscricao.categoria %}
+        <div style="grid-column:1/-1;">
+          <div style="font-size:0.75rem;color:#888;text-transform:uppercase;">Categoria</div>
+          <strong>{{ inscricao.categoria }}</strong>
+        </div>
+        {% endif %}
+        <div style="grid-column:1/-1;">
+          <div style="font-size:0.75rem;color:#888;text-transform:uppercase;">Campeonato</div>
+          <strong>{{ inscricao.campeonato.nome }}</strong>
+        </div>
+        <div style="grid-column:1/-1;">
+          <div style="font-size:0.75rem;color:#888;text-transform:uppercase;">Documento</div>
+          {% if inscricao.modalidade_inscricao == 'bolsa' and inscricao.documento_bolsa %}
+            <a href="{{ inscricao.documento_bolsa.url }}" target="_blank" class="btn btn-outline">📄 Ver documento de bolsa</a>
+          {% elif inscricao.comprovante_pagamento %}
+            <a href="{{ inscricao.comprovante_pagamento.url }}" target="_blank" class="btn btn-outline">📄 Ver comprovante de pagamento</a>
+          {% else %}
+            <span style="color:var(--cinza);">Nenhum documento anexado.</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if ja_fez_checkin %}
+  <div style="background: #d5f5e3; padding: 1rem 2rem; border-top: 1px solid #a9dfbf; text-align: center;">
+    <span style="color: #1e8449; font-weight: 700; font-size: 1.05rem;">
+      ✔ CHECK-IN JÁ REALIZADO EM {{ inscricao.checkin.realizado_em|date:"d/m/Y H:i" }}
+    </span>
+    {% if inscricao.checkin.baia %}
+      <div style="margin-top:0.3rem; color: #1e8449;">Baia designada: <strong>{{ inscricao.checkin.baia }}</strong></div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+{% if not ja_fez_checkin %}
+<div class="form-card" style="max-width:600px;">
+  <h2>Confirmar Check-in</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label>Baia (opcional)</label>
+      {{ form.baia }}
+    </div>
+    <div class="form-group">
+      <label>Validado por</label>
+      {{ form.validado_por }}
+    </div>
+    <div class="form-actions">
+      <a href="{% url 'apoio_home' %}" class="btn btn-outline">Cancelar</a>
+      <button type="submit" class="btn btn-success" style="font-size:1.05rem;padding:0.6rem 2rem;">
+        ✅ Confirmar Check-in
+      </button>
+    </div>
+  </form>
+</div>
+{% else %}
+<div style="text-align:center;">
+  <a href="{% url 'apoio_home' %}" class="btn btn-primary">← Voltar ao Scanner</a>
+</div>
+{% endif %}
+{% endblock %}

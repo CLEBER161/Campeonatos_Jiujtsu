@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Login da Organização | Campeonato Jiu-Jitsu{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🔐 Login da <span>Organização</span></h1>
+  <a href="{% url 'home' %}" class="btn btn-outline">← Início</a>
+</div>
+
+<div class="form-card" style="max-width:460px;">
+  <h2>Acesso Restrito – Equipe de Organização</h2>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %}" style="margin-bottom:1rem;">
+        {{ msg }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    {% if next %}
+      <input type="hidden" name="next" value="{{ next }}">
+    {% endif %}
+    <div class="form-group">
+      <label>Usuário</label>
+      <input type="text" name="username" class="form-control" autofocus required>
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" name="password" class="form-control" required>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Entrar</button>
+    </div>
+  </form>
+
+  <p style="margin-top:1rem;color:var(--cinza);font-size:0.9rem;">
+    Este acesso é exclusivo para a equipe de organização do campeonato.<br>
+    Árbitros e mesários devem usar os portais específicos.
+  </p>
+</div>
+{% endblock %}

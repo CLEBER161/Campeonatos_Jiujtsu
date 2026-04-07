@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Chaveamento - {{ atleta.nome }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Meu Chaveamento</h1>
+  <a href="{% url 'atleta_detalhe' atleta.pk %}" class="btn btn-outline">← Perfil</a>
+</div>
+
+<div class="card" style="margin-bottom:1.2rem;">
+  <div class="card-body">
+    <h2 style="margin-bottom:0.5rem;">{{ atleta.nome }}</h2>
+    <p style="color:var(--cinza);">
+      Campeonato: <strong>{{ inscricao.campeonato.nome }}</strong> | Categoria: <strong>{{ inscricao.categoria }}</strong> | Chave: <strong>{{ chave.nome }}</strong>
+    </p>
+  </div>
+</div>
+
+<div class="card" style="overflow:visible;">
+  <div class="card-header">Lutas da Chave</div>
+  <div class="card-body">
+    <div class="bracket-container">
+      {% for rodada, lutas in rodadas.items %}
+      <div class="bracket-round">
+        <div class="bracket-round-title">Rodada {{ rodada }}</div>
+        {% for luta in lutas %}
+        <div class="match-card" style="border:2px solid {% if luta.atleta1 == atleta or luta.atleta2 == atleta %}#c0392b{% else %}#e0e0e0{% endif %};">
+          <div class="match-player {% if luta.vencedor == luta.atleta1 %}vencedor{% elif luta.vencedor and luta.vencedor != luta.atleta1 %}perdedor{% endif %}">
+            <span>{% if luta.atleta1 == atleta %}<strong>⭐ {{ luta.atleta1.nome|default:'BYE' }}</strong>{% else %}{{ luta.atleta1.nome|default:'BYE' }}{% endif %}</span>
+            <span class="pts">{{ luta.pontos_atleta1 }}</span>
+          </div>
+          <div class="match-player {% if luta.vencedor == luta.atleta2 %}vencedor{% elif luta.vencedor and luta.vencedor != luta.atleta2 %}perdedor{% endif %}">
+            <span>{% if luta.atleta2 == atleta %}<strong>⭐ {{ luta.atleta2.nome|default:'BYE' }}</strong>{% else %}{{ luta.atleta2.nome|default:'BYE' }}{% endif %}</span>
+            <span class="pts">{{ luta.pontos_atleta2 }}</span>
+          </div>
+          <div class="match-actions" style="font-size:0.8rem;">
+            {% if luta.resultado == 'pendente' %}
+              Aguardando resultado
+            {% else %}
+              {{ luta.get_resultado_display }}
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

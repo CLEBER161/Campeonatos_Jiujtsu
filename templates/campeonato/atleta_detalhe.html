@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}{{ atleta.nome }} | Campeonato Jiu-Jitsu{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Perfil do Atleta</h1>
+  <a href="{% url 'atleta_lista' %}" class="btn btn-outline">← Voltar</a>
+</div>
+
+<div class="atleta-perfil">
+  {% if atleta.foto %}
+    <img src="{{ atleta.foto.url }}" alt="{{ atleta.nome }}" class="atleta-foto">
+  {% else %}
+    <div class="atleta-foto-placeholder">🥋</div>
+  {% endif %}
+
+  <div class="atleta-info">
+    <h2>{{ atleta.nome }}</h2>
+    <span class="badge-faixa faixa-{{ atleta.faixa }}">{{ atleta.get_faixa_display }}</span>
+
+    <div class="info-grid" style="margin-top:1rem;">
+      <div class="info-item">
+        <label>Academia</label>
+        <span>{{ atleta.academia }}</span>
+      </div>
+      <div class="info-item">
+        <label>Sexo</label>
+        <span>{{ atleta.get_sexo_display }}</span>
+      </div>
+      <div class="info-item">
+        <label>Peso</label>
+        <span>{{ atleta.peso }} kg</span>
+      </div>
+      <div class="info-item">
+        <label>Idade</label>
+        <span>{{ atleta.idade }} anos</span>
+      </div>
+      <div class="info-item">
+        <label>Data de Nascimento</label>
+        <span>{{ atleta.data_nascimento|date:"d/m/Y" }}</span>
+      </div>
+      <div class="info-item">
+        <label>Categoria</label>
+        <span>{{ inscricao.categoria|default:"Não definida" }}</span>
+      </div>
+      <div class="info-item">
+        <label>Campeonato</label>
+        <span>{{ campeonato_atual|default:"Não selecionado" }}</span>
+      </div>
+      {% if inscricao %}
+      <div class="info-item">
+        <label>Modalidade</label>
+        <span>{{ inscricao.get_modalidade_inscricao_display }}</span>
+      </div>
+      <div class="info-item">
+        <label>QR Code</label>
+        <span>{% if inscricao.documentacao_ok %}Liberado{% else %}Pendente de documento{% endif %}</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <div style="margin-top:1.5rem; display:flex; gap:0.75rem;">
+      <a href="{% url 'atleta_credencial' atleta.pk %}" class="btn btn-success">🎫 Credencial / QR</a>
+      <a href="{% url 'atleta_chaveamento' atleta.pk %}" class="btn btn-dark">🏆 Meu Chaveamento</a>
+      <a href="{% url 'atleta_ranking' atleta.pk %}" class="btn btn-outline">📈 Meu Ranking</a>
+      <a href="{% url 'atleta_editar' atleta.pk %}" class="btn btn-warning">Editar</a>
+      <a href="{% url 'atleta_excluir' atleta.pk %}" class="btn btn-danger">Excluir</a>
+    </div>
+
+    {% if minha_posicao %}
+    <div style="margin-top:1rem; color:var(--cinza); font-size:0.95rem;">
+      Posicao atual no ranking da categoria: <strong style="color:var(--vermelho);">#{{ minha_posicao }}</strong>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">Histórico de Lutas</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Rodada</th>
+        <th>Adversário</th>
+        <th>Resultado</th>
+        <th>Pontos</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for luta in lutas %}
+      <tr>
+        <td>{{ luta.rodada }}</td>
+        <td>
+          {% if luta.atleta1 == atleta %}
+            {{ luta.atleta2.nome|default:"BYE" }}
+          {% else %}
+            {{ luta.atleta1.nome|default:"BYE" }}
+          {% endif %}
+        </td>
+        <td>
+          {% if luta.vencedor == atleta %}
+            <span style="color:#27ae60;font-weight:700;">✔ Vitória</span>
+          {% elif luta.resultado == 'pendente' %}
+            <span style="color:var(--cinza);">Pendente</span>
+          {% elif luta.resultado == 'bye' %}
+            <span style="color:#2980b9;">BYE</span>
+          {% else %}
+            <span style="color:var(--vermelho);">✘ Derrota</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if luta.atleta1 == atleta %}
+            {{ luta.pontos_atleta1 }}
+          {% else %}
+            {{ luta.pontos_atleta2 }}
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4" style="text-align:center;color:var(--cinza);">Nenhuma luta registrada.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} | Campeonato Jiu-Jitsu{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ titulo }}</h1>
+  <a href="{% url 'atleta_lista' %}" class="btn btn-outline">← Voltar</a>
+</div>
+
+<div class="form-card">
+  <h2>{{ titulo }}</h2>
+  <div style="margin-bottom:1rem;padding:0.8rem 1rem;background:#f8f8f8;border-left:4px solid var(--vermelho);border-radius:6px;color:var(--cinza);font-size:0.92rem;">
+    Este cadastro cria o perfil do atleta e, se houver campeonato selecionado na Organização, também gera a inscrição no evento atual.
+  </div>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="form-group"><label>Nome Completo</label>{{ form.nome }}</div>
+    <div class="form-row">
+      <div class="form-group"><label>Data de Nascimento</label>{{ form.data_nascimento }}</div>
+      <div class="form-group"><label>Sexo</label>{{ form.sexo }}</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Faixa</label>{{ form.faixa }}</div>
+      <div class="form-group"><label>Peso (kg)</label>{{ form.peso }}</div>
+    </div>
+    <div class="form-group"><label>Academia / Equipe</label>{{ form.academia }}</div>
+    <div style="margin-bottom:1rem;padding:0.8rem 1rem;background:#f8f8f8;border-left:4px solid var(--vermelho);border-radius:6px;color:var(--cinza);font-size:0.92rem;">
+      A categoria será definida automaticamente pelo sistema com base em faixa, sexo, peso e idade.
+    </div>
+    <div id="preview-categoria" style="margin-bottom:1rem;padding:0.9rem 1rem;background:#f4f4f4;border:1px dashed #d7d7d7;border-radius:6px;color:var(--cinza);font-size:0.92rem;">
+      Preencha data de nascimento, sexo, faixa e peso para ver a categoria prevista.
+    </div>
+    <div class="form-group"><label>Foto (opcional)</label>{{ form.foto }}</div>
+
+    {% if form.errors %}
+      <div style="color:var(--vermelho);margin-bottom:1rem;">
+        {% for field in form %}{% for err in field.errors %}<p>{{ field.label }}: {{ err }}</p>{% endfor %}{% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="form-actions">
+      <a href="{% url 'atleta_lista' %}" class="btn btn-outline">Cancelar</a>
+      <button type="submit" class="btn btn-primary">Salvar</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  const campoNascimento = document.getElementById('id_data_nascimento');
+  const campoSexo = document.getElementById('id_sexo');
+  const campoFaixa = document.getElementById('id_faixa');
+  const campoPeso = document.getElementById('id_peso');
+  const previewCategoria = document.getElementById('preview-categoria');
+
+  let previewTimeout = null;
+
+  async function atualizarPreviewCategoria() {
+    const params = new URLSearchParams({
+      data_nascimento: campoNascimento.value,
+      sexo: campoSexo.value,
+      faixa: campoFaixa.value,
+      peso: campoPeso.value,
+    });
+
+    if (!campoNascimento.value || !campoSexo.value || !campoFaixa.value || !campoPeso.value) {
+      previewCategoria.style.background = '#f4f4f4';
+      previewCategoria.style.borderColor = '#d7d7d7';
+      previewCategoria.style.color = 'var(--cinza)';
+      previewCategoria.textContent = 'Preencha data de nascimento, sexo, faixa e peso para ver a categoria prevista.';
+      return;
+    }
+
+    previewCategoria.style.background = '#fffdf2';
+    previewCategoria.style.borderColor = '#f1c40f';
+    previewCategoria.style.color = '#8a6d00';
+    previewCategoria.textContent = 'Calculando categoria prevista...';
+
+    try {
+      const response = await fetch(`{% url 'atleta_prever_categoria' %}?${params.toString()}`);
+      const data = await response.json();
+      if (data.ok) {
+        previewCategoria.style.background = '#eafaf1';
+        previewCategoria.style.borderColor = '#27ae60';
+        previewCategoria.style.color = '#1e8449';
+        previewCategoria.innerHTML = `<strong>Categoria prevista:</strong> ${data.categoria}`;
+      } else {
+        previewCategoria.style.background = '#fdecea';
+        previewCategoria.style.borderColor = '#c0392b';
+        previewCategoria.style.color = '#922b21';
+        previewCategoria.textContent = data.mensagem;
+      }
+    } catch (error) {
+      previewCategoria.style.background = '#fdecea';
+      previewCategoria.style.borderColor = '#c0392b';
+      previewCategoria.style.color = '#922b21';
+      previewCategoria.textContent = 'Não foi possível calcular a categoria agora.';
+    }
+  }
+
+  function agendarPreviewCategoria() {
+    clearTimeout(previewTimeout);
+    previewTimeout = setTimeout(atualizarPreviewCategoria, 250);
+  }
+
+  [campoNascimento, campoSexo, campoFaixa, campoPeso].forEach((campo) => {
+    campo.addEventListener('input', agendarPreviewCategoria);
+    campo.addEventListener('change', agendarPreviewCategoria);
+  });
+
+  atualizarPreviewCategoria();
+</script>
+{% endblock %}

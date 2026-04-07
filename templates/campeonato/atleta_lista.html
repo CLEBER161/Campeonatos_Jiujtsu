@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Atletas | Campeonato Jiu-Jitsu{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🥋 <span>Atletas</span></h1>
+  <a href="{% url 'atleta_criar' %}" class="btn btn-primary">+ Cadastrar Atleta</a>
+</div>
+
+{% if request.session.campeonato_atual_id %}
+<div style="margin-bottom:1rem;color:var(--cinza);font-size:0.92rem;">Lista filtrada pelo campeonato selecionado na Organização.</div>
+{% endif %}
+
+<form class="search-bar" method="get">
+  <input type="text" name="q" placeholder="Buscar por nome ou academia..." value="{{ q }}">
+  <button type="submit" class="btn btn-dark">Buscar</button>
+  {% if q %}<a href="{% url 'atleta_lista' %}" class="btn btn-outline">Limpar</a>{% endif %}
+</form>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Faixa</th>
+        <th>Peso (kg)</th>
+        <th>Sexo</th>
+        <th>Academia</th>
+        <th>Categoria</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for atleta in atletas %}
+      <tr>
+        <td><a href="{% url 'atleta_detalhe' atleta.pk %}" style="color:var(--vermelho);font-weight:600;">{{ atleta.nome }}</a></td>
+        <td>
+          <span class="badge-faixa faixa-{{ atleta.faixa }}">{{ atleta.get_faixa_display }}</span>
+        </td>
+        <td>{{ atleta.peso }}</td>
+        <td>{{ atleta.get_sexo_display }}</td>
+        <td>{{ atleta.academia }}</td>
+        <td>{{ atleta.inscricao_atual.categoria|default:"—" }}</td>
+        <td>
+          <div class="actions">
+            <a href="{% url 'atleta_credencial' atleta.pk %}" class="btn btn-sm btn-success">🎫 QR</a>
+            <a href="{% url 'atleta_detalhe' atleta.pk %}" class="btn btn-sm btn-dark">Ver</a>
+            <a href="{% url 'atleta_editar' atleta.pk %}" class="btn btn-sm btn-warning">Editar</a>
+            <a href="{% url 'atleta_excluir' atleta.pk %}" class="btn btn-sm btn-danger">Excluir</a>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="7" style="text-align:center;color:var(--cinza);padding:2rem;">
+          Nenhum atleta encontrado.
+          <a href="{% url 'atleta_criar' %}" style="color:var(--vermelho);">Cadastrar agora</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

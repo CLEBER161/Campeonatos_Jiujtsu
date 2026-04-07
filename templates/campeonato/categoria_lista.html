@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Categorias | Campeonato Jiu-Jitsu{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>📋 <span>Categorias</span></h1>
+  <a href="{% url 'categoria_criar' %}" class="btn btn-primary">+ Nova Categoria</a>
+</div>
+
+<div class="card">
+  <table>
+    <thead>
+      <tr>
+        <th>Categoria</th>
+        <th>Faixa</th>
+        <th>Sexo</th>
+        <th>Peso (kg)</th>
+        <th>Idade</th>
+        <th>Atletas</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cat in categorias %}
+      <tr>
+        <td><strong>{{ cat.nome }}</strong></td>
+        <td><span class="badge-faixa faixa-{{ cat.faixa }}">{{ cat.get_faixa_display }}</span></td>
+        <td>{{ cat.get_sexo_display }}</td>
+        <td>
+          {% if cat.peso_min and cat.peso_max %}
+            {{ cat.peso_min }} – {{ cat.peso_max }}
+          {% elif cat.peso_max %}
+            até {{ cat.peso_max }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          {% if cat.idade_min and cat.idade_max %}
+            {{ cat.idade_min }} – {{ cat.idade_max }} anos
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          <strong style="color:var(--vermelho);">{{ cat.total_atletas }}</strong>
+        </td>
+        <td>
+          <div class="actions">
+            {% if cat.total_atletas >= 2 %}
+              <a href="{% url 'chave_gerar' cat.pk %}" class="btn btn-sm btn-success">⚔ Regerar</a>
+            {% endif %}
+            {% if cat.chaves.first %}
+              <a href="{% url 'chave_detalhe' cat.chaves.first.pk %}" class="btn btn-sm btn-dark">👁 Ver Chave</a>
+              <a href="{% url 'organizacao_tatames_chave' cat.chaves.first.pk %}" class="btn btn-sm btn-outline">🎯 Locais</a>
+            {% endif %}
+            <a href="{% url 'categoria_editar' cat.pk %}" class="btn btn-sm btn-warning">Editar</a>
+            <a href="{% url 'categoria_excluir' cat.pk %}" class="btn btn-sm btn-danger">Excluir</a>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="7" style="text-align:center;color:var(--cinza);padding:2rem;">
+          Nenhuma categoria criada ainda.
+          <a href="{% url 'categoria_criar' %}" style="color:var(--vermelho);">Criar agora</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div style="margin-top:1rem;color:var(--cinza);font-size:0.9rem;">
+  O chaveamento é atualizado automaticamente conforme os atletas entram ou saem da categoria, enquanto não houver lutas iniciadas/finalizadas.
+</div>
+{% endblock %}

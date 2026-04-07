@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Login do {{ titulo_area|default:'Árbitro' }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>⚖ Login do <span>{{ titulo_area|default:'Árbitro' }}</span></h1>
+  <a href="{% url 'home' %}" class="btn btn-outline">← Início</a>
+</div>
+
+<div class="form-card" style="max-width:460px;">
+  <h2>{{ subtitulo_area|default:'Acessar Minha Mesa' }}</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label>Usuário</label>
+      <input type="text" name="username" class="form-control" required>
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" name="password" class="form-control" required>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Entrar</button>
+    </div>
+  </form>
+  <div style="margin-top:0.75rem;">
+    <a href="{% url 'password_reset' %}" class="btn btn-outline">Esqueci minha senha</a>
+  </div>
+  <p style="margin-top:1rem;color:var(--cinza);font-size:0.9rem;">
+    O acesso de {{ titulo_area|default:'árbitro'|lower }} é individual. A organização precisa aprovar a conta antes do primeiro acesso.
+  </p>
+  <div style="margin-top:1rem;{% if titulo_area != 'Árbitro' %}display:none;{% endif %}">
+    <a href="{% url 'arbitro_cadastro' %}" class="btn btn-outline">Solicitar Cadastro de Árbitro</a>
+  </div>
+</div>
+{% endblock %}

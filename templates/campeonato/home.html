@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Início | Campeonato Jiu-Jitsu{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <h1>Campeonato de <span>Jiu-Jitsu</span></h1>
+  <p>Sistema de gerenciamento de atletas, campeonatos, inscrições e chaves de luta.</p>
+  <div class="hero-actions">
+    <a href="{% url 'atleta_cadastro' %}" class="btn btn-primary">Criar Conta de Atleta</a>
+    <a href="{% url 'espaco_atletas' %}" class="btn btn-outline">Ver Campeonatos</a>
+    <a href="{% url 'organizacao_home' %}" class="btn btn-dark">Painel da Organização</a>
+    {% if user.is_authenticated %}
+    <a href="{% if user.perfil_arbitro %}{% if user.perfil_arbitro.funcao == 'mesario' %}{% url 'mesario_logout' %}{% else %}{% url 'arbitro_logout' %}{% endif %}{% else %}{% url 'atleta_logout' %}{% endif %}" class="btn btn-outline">Trocar Conta</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if campeonato_atual %}
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-body" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:0.85rem;color:var(--cinza);text-transform:uppercase;">Campeonato em destaque</div>
+      <h2 style="margin:0.2rem 0;">{{ campeonato_atual.nome }}</h2>
+      <div style="color:var(--cinza);">
+        {% if campeonato_atual.local %}{{ campeonato_atual.local }}{% else %}Local a definir{% endif %}
+        {% if campeonato_atual.data_evento %} · {{ campeonato_atual.data_evento|date:"d/m/Y" }}{% endif %}
+      </div>
+    </div>
+    {% if campeonato_atual.inscricoes_abertas %}
+      <a href="{% url 'espaco_atletas' %}" class="btn btn-success">Inscrições Abertas</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <span class="stat-num">{{ total_atletas }}</span>
+    <span class="stat-label">Inscrições no Evento</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-num">{{ total_categorias }}</span>
+    <span class="stat-label">Categorias</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-num">{{ total_lutas }}</span>
+    <span class="stat-label">Lutas Geradas</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-num">{{ lutas_pendentes }}</span>
+    <span class="stat-label">Lutas Pendentes</span>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:1.5rem; margin-bottom:1.5rem;">
+  <a href="{% url 'espaco_atletas' %}" style="text-decoration:none;">
+    <div style="background:linear-gradient(135deg,#0d0d0d,#27ae60);color:#fff;border-radius:12px;padding:2rem;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.15);transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+      <div style="font-size:2.5rem;margin-bottom:0.5rem;">🥋</div>
+      <div style="font-size:1.2rem;font-weight:800;">Espaço Atletas</div>
+      <div style="opacity:0.8;font-size:0.9rem;margin-top:4px;">Inscrição, cadastro e credencial QR</div>
+    </div>
+  </a>
+  <a href="{% url 'organizacao_home' %}" style="text-decoration:none;">
+    <div style="background:linear-gradient(135deg,#0d0d0d,#8e44ad);color:#fff;border-radius:12px;padding:2rem;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.15);transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+      <div style="font-size:2.5rem;margin-bottom:0.5rem;">📋</div>
+      <div style="font-size:1.2rem;font-weight:800;">Espaço Organização</div>
+      <div style="opacity:0.8;font-size:0.9rem;margin-top:4px;">Gestão geral do campeonato</div>
+    </div>
+  </a>
+  <a href="{% url 'apoio_home' %}" style="text-decoration:none;">
+    <div style="background:linear-gradient(135deg,#0d0d0d,#f39c12);color:#fff;border-radius:12px;padding:2rem;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.15);transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+      <div style="font-size:2.5rem;margin-bottom:0.5rem;">🛡</div>
+      <div style="font-size:1.2rem;font-weight:800;">Portal de Apoio</div>
+      <div style="opacity:0.8;font-size:0.9rem;margin-top:4px;">Scanner QR Code · Check-in de atletas</div>
+    </div>
+  </a>
+  <a href="{% url 'arbitro_home' %}" style="text-decoration:none;">
+    <div style="background:linear-gradient(135deg,#0d0d0d,#2980b9);color:#fff;border-radius:12px;padding:2rem;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.15);transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+      <div style="font-size:2.5rem;margin-bottom:0.5rem;">⚖</div>
+      <div style="font-size:1.2rem;font-weight:800;">Portal do Árbitro</div>
+      <div style="opacity:0.8;font-size:0.9rem;margin-top:4px;">Login individual, mesa vinculada e histórico</div>
+    </div>
+  </a>
+  <a href="{% url 'mesario_home' %}" style="text-decoration:none;">
+    <div style="background:linear-gradient(135deg,#0d0d0d,#16a085);color:#fff;border-radius:12px;padding:2rem;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.15);transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+      <div style="font-size:2.5rem;margin-bottom:0.5rem;">🧾</div>
+      <div style="font-size:1.2rem;font-weight:800;">Portal do Mesário</div>
+      <div style="opacity:0.8;font-size:0.9rem;margin-top:4px;">Operação da mesa, lançamento de pontos e controle do tatame</div>
+    </div>
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-header">Ações Rápidas</div>
+  <div class="card-body">
+    <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+      <a href="{% url 'espaco_atletas' %}" class="btn btn-primary">🥋 Campeonatos e Inscrições</a>
+      <a href="{% url 'organizacao_home' %}" class="btn btn-outline">📋 Espaço Organização</a>
+      <a href="{% url 'categoria_lista' %}" class="btn btn-dark">📋 Gerenciar Categorias</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
