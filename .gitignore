@@ -33,6 +33,7 @@ Thumbs.db
 
 # Documentos gerados
 Manual_Sistema_Campeonato_JiuJitsu.docx
+~$*.docx
 
 # Pytest / cobertura
 .coverage
