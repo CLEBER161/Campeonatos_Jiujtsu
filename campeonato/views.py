@@ -1940,17 +1940,30 @@ def placar_tatame(request, pk):
 
 
 def api_placar_tatame(request, pk):
-    """API de polling: retorna a luta em andamento do tatame (ou vazia)."""
+    """API de polling: retorna a luta em andamento do tatame (ou a última finalizada)."""
     tatame = get_object_or_404(Tatame, pk=pk)
     luta = Luta.objects.filter(
         tatame=tatame, status='em_andamento'
     ).select_related('atleta1', 'atleta2', 'chave__categoria').first()
+
+    # Se não há em andamento, mostra a última finalizada (para o win overlay)
+    if not luta:
+        luta = Luta.objects.filter(
+            tatame=tatame, status='finalizada'
+        ).select_related('atleta1', 'atleta2', 'chave__categoria').order_by('-pk').first()
 
     if not luta:
         return JsonResponse({'luta_id': None})
 
     a1 = luta.atleta1
     a2 = luta.atleta2
+    vencedor = luta.vencedor if hasattr(luta, 'vencedor') else None
+    if not vencedor and luta.vencedor_id:
+        from campeonato.models import Atleta
+        try:
+            vencedor = Atleta.objects.get(pk=luta.vencedor_id)
+        except Exception:
+            pass
     return JsonResponse({
         'luta_id': luta.pk,
         'status': luta.status,
@@ -1966,6 +1979,7 @@ def api_placar_tatame(request, pk):
         'penalizacoes_atleta1': luta.penalizacoes_atleta1,
         'penalizacoes_atleta2': luta.penalizacoes_atleta2,
         'vencedor_id': luta.vencedor_id,
+        'vencedor_nome': vencedor.nome if vencedor else '',
     })
 
 
