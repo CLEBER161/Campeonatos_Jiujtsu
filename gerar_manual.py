@@ -138,10 +138,19 @@ set_run_color(r2, COR_SECAO)
 p3 = doc.add_paragraph()
 p3.alignment = WD_ALIGN_PARAGRAPH.CENTER
 p3.paragraph_format.space_before = Pt(60)
-r3 = p3.add_run(f'Versão 2.0  ·  {datetime.date.today().strftime("%B de %Y")}')
+r3 = p3.add_run(f'Versão 2.1  ·  {datetime.date.today().strftime("%B de %Y")}')
 r3.font.size = Pt(11)
 set_run_color(r3, COR_CINZA)
 r3.italic = True
+
+# Versão
+doc.add_paragraph()
+p3b = doc.add_paragraph()
+p3b.alignment = WD_ALIGN_PARAGRAPH.CENTER
+r3b = p3b.add_run('Versão 2.1  ·  ' + datetime.date.today().strftime('%B de %Y'))
+r3b.font.size = Pt(10)
+set_run_color(r3b, COR_SECAO)
+r3b.bold = True
 
 doc.add_page_break()
 
@@ -242,6 +251,20 @@ bullet(doc, 'Cadastrar categorias com faixa, gênero, peso e idade.')
 bullet(doc, 'Categorias padrão pré-configuradas para jiu-jitsu (branca, azul, roxa, marrom, preta).')
 bullet(doc, 'Vincular categorias a campeonatos.')
 bullet(doc, 'Visualizar atletas inscritos por categoria.')
+body(doc, 'Duração da luta por faixa (regras IBJJF) — preenchida automaticamente ao salvar a categoria:', bold=True)
+tabela_acesso(doc,
+    [
+        ('Cinza / Amarela / Laranja / Verde', '4 min (240 s)', 'Categoria infanto-juvenil'),
+        ('Branca',                            '5 min (300 s)', 'Categoria padrão'),
+        ('Azul',                              '6 min (360 s)', ''),
+        ('Roxa',                              '7 min (420 s)', ''),
+        ('Marrom',                            '8 min (480 s)', ''),
+        ('Preta',                             '10 min (600 s)', ''),
+    ],
+    ['Faixa', 'Duração', 'Observação']
+)
+bullet(doc, 'O campo «Duração (segundos)» é atualizado automaticamente pelo método save() do modelo — não é necessário preencher manualmente.')
+bullet(doc, 'O tempo é exibido como cronômetro regressivo no telão de placar durante a luta.')
 
 heading(doc, '2.3 Tatames e Baias', 2)
 bullet(doc, 'Criar tatames numerados e vinculá-los ao campeonato.')
@@ -347,14 +370,28 @@ heading(doc, '4. Telão de Placar (Projeção)', 1)
 url(doc, 'Telão do tatame', 'http://127.0.0.1:8000/tatame/<id>/placar/')
 body(doc,
     'Página pública para projeção em TV ou monitor de grande porte. '
-    'Não requer login.')
-bullet(doc, 'Placar em tela cheia com fundo escuro de alto contraste.')
-bullet(doc, 'Nomes, academias e faixas dos atletas com cores azul (atleta 1) e vermelho (atleta 2).')
-bullet(doc, 'Pontos, vantagens e penalizações visíveis para plateia.')
+    'Não requer login. Visual inspirado em jogos de luta (Street Fighter) '
+    'com fonte arcade, cores neon e efeitos luminosos.')
+bullet(doc, 'Fundo escuro com textura de scanlines (estilo CRT arcade).')
+bullet(doc, 'Painel esquerdo azul (P1) e painel direito vermelho (P2) com degradê e efeito diagonal.')
+bullet(doc, 'Nomes dos atletas em fonte Press Start 2P com brilho colorido na cor do painel.')
+bullet(doc, 'Bandeiras de canto P1 / P2 indicando o lado de cada atleta.')
+bullet(doc, 'Barras de vida horizontais no topo — azul (P1) e vermelha (P2) — que crescem proporcionalmente à pontuação.')
+bullet(doc, 'Número de pontos gigante (estilo arcade) com glow na cor do atleta.')
+bullet(doc, 'Vantagens (amarelo) e penalizações (laranja) abaixo dos pontos.')
+bullet(doc, '"VS" dourado pulsante no centro.')
+bullet(doc, 'Round e categoria exibidos no topo em fonte arcade dourada.')
+body(doc, 'Cronômetro regressivo de luta:', bold=True)
+bullet(doc, 'Exibe o tempo restante da luta no formato MM:SS, centralizado no topo.')
+bullet(doc, 'Tempo definido automaticamente pela faixa da categoria conforme regras IBJJF.')
+bullet(doc, 'Últimos 30 segundos: cronômetro fica vermelho pulsante (modo URGENTE).')
+bullet(doc, 'Tempo zerado: 00:00 com piscar rápido (modo EXPIRADO).')
+bullet(doc, 'Sem luta ativa: exibe --:-- (travado).')
+body(doc, 'Outros comportamentos:', bold=True)
 bullet(doc, 'Atualização automática a cada 2 segundos via polling JSON.')
 bullet(doc, 'Animação de flash quando o placar muda.')
-bullet(doc, 'Relógio em tempo real no canto da tela.')
-bullet(doc, 'Quando não há luta em andamento, exibe mensagem de espera.')
+bullet(doc, 'Quando a luta termina: overlay "K.O. !" com nome do vencedor em animação de entrada.')
+bullet(doc, 'Quando não há luta em andamento: tela de espera com ícone pulsante.')
 
 # ══════════════════════════════════════════════════════════════════════════════
 # 5. MÓDULO DO ATLETA
