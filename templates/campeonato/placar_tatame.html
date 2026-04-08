@@ -57,10 +57,24 @@
       text-transform: uppercase;
       text-align: center;
     }
-    .sf-relogio {
+    .sf-cronometro {
       font-family: 'Press Start 2P', monospace;
-      font-size: clamp(0.5rem, 1.2vw, 0.75rem);
-      opacity: 0.5;
+      font-size: clamp(1.8rem, 5vw, 3.2rem);
+      color: #f1c40f;
+      letter-spacing: 6px;
+      text-shadow: 0 0 20px #f1c40f99;
+      min-width: 5ch;
+      text-align: center;
+      transition: color 0.3s;
+    }
+    .sf-cronometro.urgente {
+      color: #e74c3c;
+      text-shadow: 0 0 25px #e74c3ccc;
+      animation: pulsar 0.5s ease-in-out infinite;
+    }
+    .sf-cronometro.expirado {
+      color: #e74c3c;
+      animation: pulsar 0.35s ease-in-out infinite;
     }
 
     /* barras de vida */
@@ -353,15 +367,10 @@
   <!-- TOPO: round + barras de vida -->
   <div class="topo">
     <div class="topo-linha1">
-      <div class="sf-relogio" id="relogio"></div>
-      <div>
-        <div class="sf-round" id="rodada-badge">
-          {% if luta_atual %}RODADA {{ luta_atual.rodada }}{% else %}AGUARDANDO{% endif %}
-        </div>
-        <div class="sf-categoria" id="categoria-label">
-          {% if luta_atual %}{{ luta_atual.chave.categoria }}{% else %}—{% endif %}
-        </div>
+      <div class="sf-round" id="rodada-badge">
+        {% if luta_atual %}ROUND {{ luta_atual.rodada }}{% else %}AGUARDANDO{% endif %}
       </div>
+      <div class="sf-cronometro" id="cronometro">--:--</div>
       <div id="status-topo">
         {% if luta_atual %}
           <span class="status-badge em_andamento">● LUTA</span>
@@ -369,6 +378,9 @@
           <span class="status-badge aguardando">⏸ AGUARDANDO</span>
         {% endif %}
       </div>
+    </div>
+    <div class="sf-categoria" id="categoria-label" style="text-align:center;">
+      {% if luta_atual %}{{ luta_atual.chave.categoria }}{% else %}—{% endif %}
     </div>
     <!-- Barras de vida (representam pontuação relativa) -->
     <div class="barras-linha">
@@ -452,15 +464,34 @@
     const TATAME_PK = {{ tatame.pk }};
     let lutaAtualId = {% if luta_atual %}{{ luta_atual.pk }}{% else %}null{% endif %};
     let placarAnterior = {};
+    let lutaIniciadaTs = null;   // timestamp Unix em ms
+    let lutaDuracao = 300;       // segundos
 
-    // Relógio
-    function atualizarRelogio() {
-      const agora = new Date();
-      document.getElementById('relogio').textContent =
-        agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    // ── Cronômetro regressivo ─────────────────────────────────────────
+    function atualizarCronometro() {
+      const el = document.getElementById('cronometro');
+      if (!el) return;
+      if (!lutaIniciadaTs) {
+        el.textContent = '--:--';
+        el.classList.remove('urgente', 'expirado');
+        return;
+      }
+      const elapsed = Math.floor((Date.now() - lutaIniciadaTs) / 1000);
+      const remaining = lutaDuracao - elapsed;
+      if (remaining <= 0) {
+        el.textContent = '00:00';
+        el.classList.remove('urgente');
+        el.classList.add('expirado');
+      } else {
+        el.classList.remove('expirado');
+        el.classList.toggle('urgente', remaining <= 30);
+        const m = Math.floor(remaining / 60);
+        const s = remaining % 60;
+        el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      }
     }
-    setInterval(atualizarRelogio, 1000);
-    atualizarRelogio();
+    setInterval(atualizarCronometro, 500);
+    atualizarCronometro();
 
     // Flash de atualização num elemento
     function flash(el) {
@@ -514,7 +545,9 @@
         if (categoriaEl) categoriaEl.textContent = '—';
         if (winOverlay) winOverlay.classList.remove('show');
         atualizarBarras(0, 0);
+        lutaIniciadaTs = null;
         lutaAtualId = null;
+        atualizarCronometro();
         return;
       }
 
@@ -547,6 +580,15 @@
 
       // Barras de vida
       atualizarBarras(data.pontos_atleta1 || 0, data.pontos_atleta2 || 0);
+
+      // Cronômetro
+      if (data.status === 'em_andamento' && data.iniciada_em_ts) {
+        lutaIniciadaTs = data.iniciada_em_ts * 1000;
+        lutaDuracao = data.duracao_segundos || 300;
+      } else {
+        lutaIniciadaTs = null;
+      }
+      atualizarCronometro();
 
       // Atleta 1
       if (data.atleta1) {

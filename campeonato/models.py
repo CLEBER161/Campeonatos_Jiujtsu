@@ -15,6 +15,19 @@ FAIXA_CHOICES = [
     ('preta', 'Preta'),
 ]
 
+# Duração padrão de luta por faixa (regras IBJJF)
+DURACAO_POR_FAIXA = {
+    'cinza':   240,   # 4 min — infanto-juvenil
+    'amarela': 240,
+    'laranja': 240,
+    'verde':   240,
+    'branca':  300,   # 5 min
+    'azul':    360,   # 6 min
+    'roxa':    420,   # 7 min
+    'marrom':  480,   # 8 min
+    'preta':   600,   # 10 min
+}
+
 SEXO_CHOICES = [
     ('M', 'Masculino'),
     ('F', 'Feminino'),
@@ -102,11 +115,20 @@ class Categoria(models.Model):
     peso_max = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
     idade_min = models.PositiveIntegerField(null=True, blank=True)
     idade_max = models.PositiveIntegerField(null=True, blank=True)
+    duracao_segundos = models.PositiveIntegerField(
+        default=300,
+        help_text='Duração da luta em segundos — preenchido automaticamente pela faixa (regras IBJJF).',
+    )
 
     class Meta:
         verbose_name = 'Categoria'
         verbose_name_plural = 'Categorias'
         ordering = ['faixa', 'nome']
+
+    def save(self, *args, **kwargs):
+        # Auto-define duração pela faixa conforme regras IBJJF
+        self.duracao_segundos = DURACAO_POR_FAIXA.get(self.faixa, 300)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         campeonato_nome = self.campeonato.nome if self.campeonato else 'Sem campeonato'

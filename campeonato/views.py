@@ -1980,6 +1980,8 @@ def api_placar_tatame(request, pk):
         'penalizacoes_atleta2': luta.penalizacoes_atleta2,
         'vencedor_id': luta.vencedor_id,
         'vencedor_nome': vencedor.nome if vencedor else '',
+        'iniciada_em_ts': luta.iniciada_em.timestamp() if luta.iniciada_em else None,
+        'duracao_segundos': luta.chave.categoria.duracao_segundos if luta.chave_id and luta.chave.categoria_id else 300,
     })
 
 
